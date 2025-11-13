@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 
 /// Page d'accueil
 class HomePage extends StatelessWidget {
@@ -16,6 +17,7 @@ class HomePage extends StatelessWidget {
         title: const Text('OtoRank'),
         centerTitle: true,
       ),
+      drawer: const AppDrawer(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -42,29 +44,71 @@ class HomePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Votre application mobile professionnelle',
+                'Music Player & Fitness App',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 48),
             
-            // Bouton d'action exemple
-            ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Implémenter l'action
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fonctionnalité à implémenter'),
-                    duration: Duration(seconds: 2),
+            // Boutons d'action rapide
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildQuickAccessButton(
+                  context,
+                  icon: Icons.music_note,
+                  label: 'Music Player',
+                  route: '/music-player',
+                ),
+                _buildQuickAccessButton(
+                  context,
+                  icon: Icons.download,
+                  label: 'YouTube',
+                  route: '/youtube-downloader',
+                ),
+                _buildQuickAccessButton(
+                  context,
+                  icon: Icons.timer,
+                  label: 'Tabata',
+                  route: '/tabata-timer',
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Text(
+              '👈 Ouvrez le menu pour plus d\'options',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
                   ),
-                );
-              },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Commencer'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Construit un bouton d'accès rapide
+  Widget _buildQuickAccessButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String route,
+  }) {
+    return ElevatedButton(
+      onPressed: () => Navigator.pushNamed(context, route),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 32),
+          const SizedBox(height: 8),
+          Text(label),
+        ],
       ),
     );
   }

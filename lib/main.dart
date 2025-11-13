@@ -35,10 +35,10 @@ class OtoRankApp extends StatelessWidget {
       title: 'OtoRank',
       debugShowCheckedModeBanner: false,
       
-      // Thème de l'application
-      theme: AppTheme.lightTheme,
+      // Thème sombre uniquement (noir, violet ténèbre, rouge cramoisi)
+      theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       
       // Configuration de la navigation
       initialRoute: AppRoutes.home,
