@@ -2,50 +2,14 @@
 /// 
 /// Ce fichier configure GetIt pour l'injection de dépendances.
 /// Toutes les dépendances de l'application sont enregistrées ici.
-/// 
-/// Note: Nécessite l'ajout du package get_it dans pubspec.yaml
-/// TODO: Décommenter une fois get_it ajouté
 library;
 
-// import 'package:get_it/get_it.dart';
-
-// final sl = GetIt.instance; // Service Locator
+import '../../features/music_player/di/music_player_injection.dart';
 
 /// Initialise toutes les dépendances
 Future<void> initializeDependencies() async {
-  // TODO: Enregistrer les dépendances ici
+  // Initialise les dépendances du music player
+  await initMusicPlayerDependencies();
   
-  // Exemple:
-  // // Core
-  // sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  
-  // // Features - Home
-  // // Bloc
-  // sl.registerFactory(() => HomeBloc(sl()));
-  
-  // // Use cases
-  // sl.registerLazySingleton(() => GetHomeData(sl()));
-  
-  // // Repository
-  // sl.registerLazySingleton<HomeRepository>(
-  //   () => HomeRepositoryImpl(
-  //     remoteDataSource: sl(),
-  //     localDataSource: sl(),
-  //     networkInfo: sl(),
-  //   ),
-  // );
-  
-  // // Data sources
-  // sl.registerLazySingleton<HomeRemoteDataSource>(
-  //   () => HomeRemoteDataSourceImpl(client: sl()),
-  // );
-  
-  // sl.registerLazySingleton<HomeLocalDataSource>(
-  //   () => HomeLocalDataSourceImpl(sharedPreferences: sl()),
-  // );
-  
-  // // External
-  // final sharedPreferences = await SharedPreferences.getInstance();
-  // sl.registerLazySingleton(() => sharedPreferences);
-  // sl.registerLazySingleton(() => http.Client());
+  // TODO: Ajouter les autres features ici
 }
