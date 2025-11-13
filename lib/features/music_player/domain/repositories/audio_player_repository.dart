@@ -1,7 +1,7 @@
 library;
 
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:otorank/core/errors/failures.dart';
 import '../entities/song.dart';
 
 /// États de lecture du player

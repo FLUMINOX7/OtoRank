@@ -3,7 +3,7 @@ library;
 import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:just_audio/just_audio.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:otorank/core/errors/failures.dart';
 import '../../domain/entities/song.dart';
 import '../../domain/repositories/audio_player_repository.dart';
 

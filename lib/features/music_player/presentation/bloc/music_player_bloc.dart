@@ -2,6 +2,7 @@ library;
 
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/song.dart';
 import '../../domain/usecases/play_song.dart';
 import '../../domain/usecases/load_playlist.dart';
 import '../../domain/repositories/audio_player_repository.dart';

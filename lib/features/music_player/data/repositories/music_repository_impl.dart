@@ -1,7 +1,7 @@
 library;
 
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:otorank/core/errors/failures.dart';
 import '../../domain/entities/song.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/ranked_playlist.dart';
