@@ -2,6 +2,8 @@
 /// 
 /// Cette application suit l'architecture Clean Architecture
 /// et les meilleures pratiques Flutter.
+library;
+
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'config/routes/app_routes.dart';

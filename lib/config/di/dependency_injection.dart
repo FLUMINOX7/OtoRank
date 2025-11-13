@@ -5,6 +5,7 @@
 /// 
 /// Note: Nécessite l'ajout du package get_it dans pubspec.yaml
 /// TODO: Décommenter une fois get_it ajouté
+library;
 
 // import 'package:get_it/get_it.dart';
 

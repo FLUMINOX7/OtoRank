@@ -2,6 +2,8 @@
 /// 
 /// Un widget affichant un message d'erreur avec
 /// une option pour réessayer.
+library;
+
 import 'package:flutter/material.dart';
 
 /// Widget affichant un message d'erreur

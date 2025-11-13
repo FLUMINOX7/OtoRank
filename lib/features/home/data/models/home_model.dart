@@ -2,7 +2,9 @@
 /// 
 /// Les modèles sont la représentation technique des entités.
 /// Ils gèrent la sérialisation/désérialisation des données.
-import '../domain/entities/home_entity.dart';
+library;
+
+import '../../domain/entities/home_entity.dart';
 
 /// Modèle de données pour Home
 class HomeModel extends HomeEntity {

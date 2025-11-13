@@ -1,6 +1,8 @@
 /// Source de données locale pour Home
 /// 
 /// Gère la persistance locale des données (cache).
+library;
+
 import '../models/home_model.dart';
 
 /// Interface de la source de données locale

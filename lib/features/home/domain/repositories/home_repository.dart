@@ -3,6 +3,8 @@
 /// Définit le contrat que l'implémentation du repository doit respecter.
 /// Cette interface se trouve dans la couche Domain et est implémentée
 /// dans la couche Data.
+library;
+
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/home_entity.dart';

@@ -2,6 +2,7 @@
 /// 
 /// Ce fichier définit les exceptions levées au niveau de la couche Data
 /// qui seront ensuite converties en Failures au niveau du Domain.
+library;
 
 /// Exception serveur
 class ServerException implements Exception {

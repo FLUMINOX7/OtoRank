@@ -2,6 +2,8 @@
 /// 
 /// Fait le lien entre la couche Domain et les sources de données.
 /// Gère la logique de cache et de récupération des données.
+library;
+
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';

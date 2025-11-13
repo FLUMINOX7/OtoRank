@@ -2,6 +2,8 @@
 /// 
 /// Les use cases contiennent la logique métier de l'application.
 /// Chaque use case effectue une seule action.
+library;
+
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/home_entity.dart';

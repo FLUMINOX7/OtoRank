@@ -1,6 +1,8 @@
 /// Source de données distante pour Home
 /// 
 /// Gère les appels API pour la fonctionnalité Home.
+library;
+
 import '../models/home_model.dart';
 
 /// Interface de la source de données distante

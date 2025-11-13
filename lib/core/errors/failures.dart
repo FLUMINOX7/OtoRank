@@ -2,6 +2,8 @@
 /// 
 /// Ce fichier définit les différents types d'erreurs qui peuvent survenir
 /// dans l'application. Basé sur le principe de Clean Architecture.
+library;
+
 import 'package:equatable/equatable.dart';
 
 /// Classe abstraite de base pour tous les échecs

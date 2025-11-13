@@ -2,6 +2,8 @@
 /// 
 /// Fournit des méthodes pour logger différents niveaux de messages
 /// (debug, info, warning, error) de manière cohérente.
+library;
+
 import 'dart:developer' as developer;
 
 /// Classe utilitaire pour le logging

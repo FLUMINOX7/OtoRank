@@ -2,8 +2,10 @@
 /// 
 /// Ce fichier définit toutes les routes et la navigation
 /// dans l'application.
+library;
+
 import 'package:flutter/material.dart';
-import '../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 
 /// Classe gérant les routes de l'application
 class AppRoutes {

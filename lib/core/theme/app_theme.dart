@@ -2,6 +2,8 @@
 /// 
 /// Ce fichier contient la configuration du thème (couleurs, typographie, etc.)
 /// pour assurer une cohérence visuelle dans toute l'application.
+library;
+
 import 'package:flutter/material.dart';
 
 /// Classe contenant les thèmes de l'application

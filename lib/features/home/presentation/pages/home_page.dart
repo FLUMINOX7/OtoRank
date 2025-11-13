@@ -1,6 +1,8 @@
 /// Page d'accueil de l'application
 /// 
 /// Première page affichée au lancement de l'application.
+library;
+
 import 'package:flutter/material.dart';
 
 /// Page d'accueil

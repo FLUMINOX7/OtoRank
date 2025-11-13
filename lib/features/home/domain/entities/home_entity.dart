@@ -2,6 +2,8 @@
 /// 
 /// Les entités représentent les objets métier de l'application.
 /// Elles sont indépendantes de toute implémentation technique.
+library;
+
 import 'package:equatable/equatable.dart';
 
 /// Entité représentant un élément Home (exemple)

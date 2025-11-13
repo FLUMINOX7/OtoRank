@@ -2,6 +2,8 @@
 /// 
 /// Un widget simple affichant un indicateur de chargement
 /// centré avec un message optionnel.
+library;
+
 import 'package:flutter/material.dart';
 
 /// Widget affichant un indicateur de chargement
