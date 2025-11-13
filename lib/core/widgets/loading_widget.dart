@@ -1,0 +1,35 @@
+/// Widget de chargement réutilisable
+/// 
+/// Un widget simple affichant un indicateur de chargement
+/// centré avec un message optionnel.
+import 'package:flutter/material.dart';
+
+/// Widget affichant un indicateur de chargement
+class LoadingWidget extends StatelessWidget {
+  final String? message;
+  
+  const LoadingWidget({
+    super.key,
+    this.message,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          if (message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message!,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
