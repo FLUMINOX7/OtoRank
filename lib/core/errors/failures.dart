@@ -18,40 +18,45 @@ abstract class Failure extends Equatable {
 
 /// Erreur serveur (5xx)
 class ServerFailure extends Failure {
-  const ServerFailure([String message = 'Erreur serveur']) : super(message);
+  const ServerFailure({String message = 'Erreur serveur'}) : super(message);
 }
 
 /// Erreur de connexion réseau
 class NetworkFailure extends Failure {
-  const NetworkFailure([String message = 'Erreur de connexion réseau']) 
+  const NetworkFailure({String message = 'Erreur de connexion réseau'}) 
       : super(message);
 }
 
 /// Erreur de cache
 class CacheFailure extends Failure {
-  const CacheFailure([String message = 'Erreur de cache']) : super(message);
+  const CacheFailure({String message = 'Erreur de cache'}) : super(message);
+}
+
+/// Erreur de lecteur audio
+class PlayerFailure extends Failure {
+  const PlayerFailure({String message = 'Erreur du lecteur audio'}) : super(message);
 }
 
 /// Erreur de validation
 class ValidationFailure extends Failure {
-  const ValidationFailure([String message = 'Erreur de validation']) 
+  const ValidationFailure({String message = 'Erreur de validation'}) 
       : super(message);
 }
 
 /// Erreur d'authentification
 class AuthenticationFailure extends Failure {
-  const AuthenticationFailure([String message = 'Erreur d\'authentification']) 
+  const AuthenticationFailure({String message = 'Erreur d\'authentification'}) 
       : super(message);
 }
 
 /// Erreur non autorisée (403)
 class UnauthorizedFailure extends Failure {
-  const UnauthorizedFailure([String message = 'Accès non autorisé']) 
+  const UnauthorizedFailure({String message = 'Accès non autorisé'}) 
       : super(message);
 }
 
 /// Erreur générique
 class GeneralFailure extends Failure {
-  const GeneralFailure([String message = 'Une erreur est survenue']) 
+  const GeneralFailure({String message = 'Une erreur est survenue'}) 
       : super(message);
 }

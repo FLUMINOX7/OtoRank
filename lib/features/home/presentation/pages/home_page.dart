@@ -77,13 +77,6 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
-            Text(
-              '👈 Ouvrez le menu pour plus d\'options',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
-            ),
           ],
         ),
       ),
