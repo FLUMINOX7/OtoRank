@@ -1,12 +1,12 @@
-/// Drawer de navigation principal
+/// Navigation drawer
 /// 
-/// Menu latéral permettant de naviguer entre les différentes
-/// fonctionnalités de l'application.
+/// Side menu to navigate between different
+/// features of the application.
 library;
 
 import 'package:flutter/material.dart';
 
-/// Widget du drawer de navigation principal
+/// Main navigation drawer widget
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
@@ -38,7 +38,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'OtoRank',
+                  '音ランク',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -46,7 +46,7 @@ class AppDrawer extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Music & Fitness App',
+                  'Your Music, Ranked',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
@@ -58,46 +58,44 @@ class AppDrawer extends StatelessWidget {
           _buildDrawerItem(
             context,
             icon: Icons.home,
-            title: 'Accueil',
+            title: 'Home',
             route: '/',
           ),
           const Divider(),
-          _buildSectionHeader(context, 'Musique'),
+          _buildSectionHeader(context, 'Features'),
           _buildDrawerItem(
             context,
-            icon: Icons.music_note,
+            icon: Icons.library_music,
             title: 'Music Player',
-            subtitle: 'Playlists ranked',
+            subtitle: 'Ranked playlists',
             route: '/music-player',
           ),
           _buildDrawerItem(
             context,
-            icon: Icons.download,
+            icon: Icons.download_rounded,
             title: 'YouTube Downloader',
-            subtitle: 'Télécharger MP3/M4A',
+            subtitle: 'Download MP3/M4A',
             route: '/youtube-downloader',
           ),
           _buildDrawerItem(
             context,
-            icon: Icons.note,
+            icon: Icons.audiotrack,
+            title: 'Audio Editor',
+            subtitle: 'Trim audio files',
+            route: '/audio-editor',
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.note_alt_outlined,
             title: 'Notes',
-            subtitle: 'Paroles & notes',
+            subtitle: 'Lyrics & notes',
             route: '/notes',
           ),
           _buildDrawerItem(
             context,
-            icon: Icons.edit,
-            title: 'Audio Editor',
-            subtitle: 'Tronquer audio',
-            route: '/audio-editor',
-          ),
-          const Divider(),
-          _buildSectionHeader(context, 'Fitness'),
-          _buildDrawerItem(
-            context,
             icon: Icons.timer,
             title: 'Tabata Timer',
-            subtitle: 'Chronomètre fitness',
+            subtitle: 'Workout timer',
             route: '/tabata-timer',
           ),
         ],
@@ -105,7 +103,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  /// Construit un header de section dans le drawer
+  /// Builds a section header in the drawer
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -121,7 +119,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  /// Construit un élément de menu dans le drawer
+  /// Builds a menu item in the drawer
   Widget _buildDrawerItem(
     BuildContext context, {
     required IconData icon,
@@ -161,7 +159,7 @@ class AppDrawer extends StatelessWidget {
       selectedTileColor:
           Theme.of(context).colorScheme.primary.withOpacity(0.1),
       onTap: () {
-        Navigator.pop(context); // Ferme le drawer
+        Navigator.pop(context); // Close the drawer
         if (!isSelected) {
           Navigator.pushNamed(context, route);
         }

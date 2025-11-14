@@ -5,6 +5,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 
 /// Page pour télécharger de la musique depuis YouTube
 class YouTubeDownloaderPage extends StatelessWidget {
@@ -16,6 +17,7 @@ class YouTubeDownloaderPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('YouTube Downloader'),
       ),
+      drawer: const AppDrawer(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

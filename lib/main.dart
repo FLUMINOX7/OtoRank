@@ -45,7 +45,7 @@ class OtoRankApp extends StatelessWidget {
       ],
       child: MaterialApp(
         // Configuration de l'application
-        title: 'OtoRank',
+        title: '音ランク',
         debugShowCheckedModeBanner: false,
         
         // Thème sombre uniquement (noir, violet ténèbre, rouge cramoisi)
