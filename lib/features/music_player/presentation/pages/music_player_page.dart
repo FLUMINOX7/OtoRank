@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../bloc/playlist_bloc.dart';
 import '../bloc/playlist_event.dart';
 import '../widgets/mini_player_widget.dart';
@@ -124,6 +125,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
           ],
         ),
       ),
+      drawer: const AppDrawer(),
       body: _permissionsGranted
           ? Column(
               children: [
