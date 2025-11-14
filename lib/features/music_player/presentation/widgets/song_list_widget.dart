@@ -9,7 +9,7 @@ import '../../di/music_player_injection.dart';
 import '../bloc/music_player_bloc.dart';
 import '../bloc/music_player_event.dart';
 
-/// Widget affichant la liste des chansons locales
+/// Widget displaying the list of local songs
 class SongListWidget extends StatefulWidget {
   const SongListWidget({super.key});
 
@@ -39,16 +39,20 @@ class _SongListWidgetState extends State<SongListWidget> {
 
     result.fold(
       (failure) {
-        setState(() {
-          _isLoading = false;
-          _error = failure.message;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _error = failure.message;
+          });
+        }
       },
       (songs) {
-        setState(() {
-          _songs = songs;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _songs = songs;
+            _isLoading = false;
+          });
+        }
       },
     );
   }
@@ -72,7 +76,7 @@ class _SongListWidgetState extends State<SongListWidget> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadSongs,
-              child: const Text('Réessayer'),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -86,16 +90,16 @@ class _SongListWidgetState extends State<SongListWidget> {
           children: [
             const Icon(Icons.music_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('Aucune chanson trouvée'),
+            const Text('No songs found'),
             const SizedBox(height: 8),
             const Text(
-              'Placez vos fichiers audio dans Music/',
+              'Place your audio files in Music/ folder',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadSongs,
-              child: const Text('Actualiser'),
+              child: const Text('Refresh'),
             ),
           ],
         ),
@@ -104,31 +108,63 @@ class _SongListWidgetState extends State<SongListWidget> {
 
     return RefreshIndicator(
       onRefresh: _loadSongs,
-      child: ListView.builder(
-        itemCount: _songs!.length,
-        itemBuilder: (context, index) {
-          final song = _songs![index];
-          return ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.music_note),
+      child: Column(
+        children: [
+          // Song counter
+          Container(
+            padding: const EdgeInsets.all(8),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${_songs!.length} song${_songs!.length != 1 ? 's' : ''}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[400],
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            title: Text(song.title),
-            subtitle: Text(song.artist ?? 'Artiste inconnu'),
-            trailing: IconButton(
-              icon: const Icon(Icons.play_arrow),
-              onPressed: () {
-                // Charge toute la liste et joue la chanson sélectionnée
-                context.read<MusicPlayerBloc>().add(
-                      LoadPlaylistEvent(_songs!, startIndex: index),
-                    );
+          ),
+          // Song list
+          Expanded(
+            child: ListView.builder(
+              itemCount: _songs!.length,
+              itemBuilder: (context, index) {
+                final song = _songs![index];
+                return ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.music_note),
+                  ),
+                  title: Text(song.title),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        onPressed: () {
+                          // TODO: Show song details dialog
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () {
+                          // Load whole playlist and play selected song
+                          context.read<MusicPlayerBloc>().add(
+                                LoadPlaylistEvent(_songs!, startIndex: index),
+                              );
+                        },
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    // Load whole playlist and play selected song
+                    context.read<MusicPlayerBloc>().add(
+                          LoadPlaylistEvent(_songs!, startIndex: index),
+                        );
+                  },
+                );
               },
             ),
-            onTap: () {
-              // Joue juste cette chanson
-              context.read<MusicPlayerBloc>().add(PlaySongEvent(song));
-            },
-          );
-        },
+          ),
+        ],
       ),
     );
   }

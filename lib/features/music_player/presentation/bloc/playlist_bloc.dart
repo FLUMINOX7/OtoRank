@@ -6,6 +6,9 @@ import '../../domain/usecases/get_ranked_playlists.dart';
 import '../../domain/usecases/create_playlist.dart';
 import '../../domain/usecases/create_ranked_playlist.dart';
 import '../../domain/usecases/update_playlist_rank.dart';
+import '../../domain/usecases/add_songs_to_playlist.dart';
+import '../../domain/usecases/remove_songs_from_playlist.dart';
+import '../../domain/usecases/get_local_songs.dart';
 import '../../domain/repositories/music_repository.dart';
 import 'playlist_event.dart';
 import 'playlist_state.dart';
@@ -17,6 +20,9 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
   final CreatePlaylist createPlaylist;
   final CreateRankedPlaylist createRankedPlaylist;
   final UpdatePlaylistRank updatePlaylistRank;
+  final AddSongsToPlaylist addSongsToPlaylist;
+  final RemoveSongsFromPlaylist removeSongsFromPlaylist;
+  final GetLocalSongs getLocalSongs;
   final MusicRepository musicRepository;
 
   PlaylistBloc({
@@ -25,14 +31,19 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     required this.createPlaylist,
     required this.createRankedPlaylist,
     required this.updatePlaylistRank,
+    required this.addSongsToPlaylist,
+    required this.removeSongsFromPlaylist,
+    required this.getLocalSongs,
     required this.musicRepository,
-  }) : super(PlaylistInitial()) {
+  }) : super(const PlaylistInitial()) {
     on<LoadAllPlaylistsEvent>(_onLoadAllPlaylists);
     on<LoadRankedPlaylistsEvent>(_onLoadRankedPlaylists);
     on<CreatePlaylistEvent>(_onCreatePlaylist);
     on<CreateRankedPlaylistEvent>(_onCreateRankedPlaylist);
+    on<UpdatePlaylistEvent>(_onUpdatePlaylist);
     on<UpdatePlaylistRankEvent>(_onUpdatePlaylistRank);
     on<AddSongToPlaylistEvent>(_onAddSongToPlaylist);
+    on<AddSongsToPlaylistEvent>(_onAddSongsToPlaylist);
     on<RemoveSongFromPlaylistEvent>(_onRemoveSongFromPlaylist);
     on<DeletePlaylistEvent>(_onDeletePlaylist);
     on<ReorderPlaylistSongsEvent>(_onReorderPlaylistSongs);
@@ -42,20 +53,29 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     LoadAllPlaylistsEvent event,
     Emitter<PlaylistState> emit,
   ) async {
-    emit(PlaylistLoading());
+    emit(PlaylistLoading(allSongs: state.allSongs));
 
+    // Load all songs first
+    final songsResult = await getLocalSongs();
+    
     final playlistsResult = await getAllPlaylists();
     final rankedPlaylistsResult = await getRankedPlaylists();
 
-    playlistsResult.fold(
-      (failure) => emit(PlaylistError(failure.message)),
-      (playlists) {
-        rankedPlaylistsResult.fold(
-          (failure) => emit(PlaylistError(failure.message)),
-          (rankedPlaylists) => emit(PlaylistsLoaded(
-            playlists: playlists,
-            rankedPlaylists: rankedPlaylists,
-          )),
+    songsResult.fold(
+      (failure) => emit(PlaylistError(failure.message, allSongs: state.allSongs)),
+      (songs) {
+        playlistsResult.fold(
+          (failure) => emit(PlaylistError(failure.message, allSongs: songs)),
+          (playlists) {
+            rankedPlaylistsResult.fold(
+              (failure) => emit(PlaylistError(failure.message, allSongs: songs)),
+              (rankedPlaylists) => emit(PlaylistsLoaded(
+                playlists: playlists,
+                rankedPlaylists: rankedPlaylists,
+                allSongs: songs,
+              )),
+            );
+          },
         );
       },
     );
@@ -141,11 +161,28 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     );
   }
 
+  Future<void> _onUpdatePlaylist(
+    UpdatePlaylistEvent event,
+    Emitter<PlaylistState> emit,
+  ) async {
+    emit(PlaylistLoading(allSongs: state.allSongs));
+
+    final result = await musicRepository.updatePlaylist(event.playlist);
+
+    result.fold(
+      (failure) => emit(PlaylistError(failure.message, allSongs: state.allSongs)),
+      (playlist) {
+        emit(PlaylistUpdated(playlist, allSongs: state.allSongs));
+        add(LoadAllPlaylistsEvent());
+      },
+    );
+  }
+
   Future<void> _onAddSongToPlaylist(
     AddSongToPlaylistEvent event,
     Emitter<PlaylistState> emit,
   ) async {
-    emit(PlaylistLoading());
+    emit(PlaylistLoading(allSongs: state.allSongs));
 
     final result = await musicRepository.addSongToPlaylist(
       playlistId: event.playlistId,
@@ -153,9 +190,25 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     );
 
     result.fold(
-      (failure) => emit(PlaylistError(failure.message)),
+      (failure) => emit(PlaylistError(failure.message, allSongs: state.allSongs)),
       (playlist) {
-        emit(PlaylistUpdated(playlist));
+        emit(PlaylistUpdated(playlist, allSongs: state.allSongs));
+        add(LoadAllPlaylistsEvent());
+      },
+    );
+  }
+
+  Future<void> _onAddSongsToPlaylist(
+    AddSongsToPlaylistEvent event,
+    Emitter<PlaylistState> emit,
+  ) async {
+    emit(PlaylistLoading(allSongs: state.allSongs));
+
+    final result = await addSongsToPlaylist(event.playlistId, event.songs);
+
+    result.fold(
+      (failure) => emit(PlaylistError(failure.message, allSongs: state.allSongs)),
+      (_) {
         add(LoadAllPlaylistsEvent());
       },
     );
@@ -165,7 +218,7 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     RemoveSongFromPlaylistEvent event,
     Emitter<PlaylistState> emit,
   ) async {
-    emit(PlaylistLoading());
+    emit(PlaylistLoading(allSongs: state.allSongs));
 
     final result = await musicRepository.removeSongFromPlaylist(
       playlistId: event.playlistId,
@@ -173,9 +226,9 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
     );
 
     result.fold(
-      (failure) => emit(PlaylistError(failure.message)),
+      (failure) => emit(PlaylistError(failure.message, allSongs: state.allSongs)),
       (playlist) {
-        emit(PlaylistUpdated(playlist));
+        emit(PlaylistUpdated(playlist, allSongs: state.allSongs));
         add(LoadAllPlaylistsEvent());
       },
     );

@@ -109,7 +109,16 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
         playbackSpeed: state.playbackSpeed,
       )),
       (_) {
-        // L'état sera mis à jour par les streams
+        // Emit playing state immediately so mini-player shows up
+        emit(MusicPlayerPlaying(
+          currentSong: event.song,
+          position: Duration.zero,
+          duration: null,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          volume: state.volume,
+          playbackSpeed: state.playbackSpeed,
+        ));
       },
     );
   }
@@ -136,7 +145,22 @@ class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
         playbackSpeed: state.playbackSpeed,
       )),
       (_) {
-        // L'état sera mis à jour par les streams
+        // Emit playing state immediately so mini-player shows up
+        final startSong = event.songs.isNotEmpty 
+            ? event.songs[event.startIndex.clamp(0, event.songs.length - 1)]
+            : null;
+        
+        if (startSong != null) {
+          emit(MusicPlayerPlaying(
+            currentSong: startSong,
+            position: Duration.zero,
+            duration: null,
+            isShuffled: state.isShuffled,
+            repeatMode: state.repeatMode,
+            volume: state.volume,
+            playbackSpeed: state.playbackSpeed,
+          ));
+        }
       },
     );
   }

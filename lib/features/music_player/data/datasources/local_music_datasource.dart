@@ -34,19 +34,28 @@ class LocalMusicDataSourceImpl implements LocalMusicDataSource {
   @override
   Future<List<SongModel>> scanLocalMusic() async {
     try {
+      print('🎵 Début du scan des musiques...');
       final List<SongModel> songs = [];
       
       // Récupère les répertoires standards de musique sur Android
       final List<Directory> musicDirectories = await _getMusicDirectories();
       
+      if (musicDirectories.isEmpty) {
+        print('⚠️ Aucun dossier de musique trouvé');
+        return songs;
+      }
+      
       for (final directory in musicDirectories) {
         if (await directory.exists()) {
+          print('📂 Scan de: ${directory.path}');
           await _scanDirectory(directory, songs);
         }
       }
       
+      print('✅ Scan terminé: ${songs.length} fichiers trouvés');
       return songs;
     } catch (e) {
+      print('❌ Erreur lors du scan: $e');
       throw Exception('Erreur lors du scan des fichiers audio: $e');
     }
   }
@@ -77,20 +86,33 @@ class LocalMusicDataSourceImpl implements LocalMusicDataSource {
   /// Récupère les répertoires de musique standards
   Future<List<Directory>> _getMusicDirectories() async {
     final List<Directory> directories = [];
+    final Set<String> addedPaths = {}; // Pour éviter les doublons
     
     try {
       // Répertoire de stockage externe (Android)
       if (Platform.isAndroid) {
-        // /storage/emulated/0/Music
-        final externalStorage = Directory('/storage/emulated/0/Music');
-        if (await externalStorage.exists()) {
-          directories.add(externalStorage);
-        }
+        // Chemins standards Android (sans les doublons /sdcard qui pointent vers /storage/emulated/0)
+        final paths = [
+          '/storage/emulated/0/Music',
+          '/storage/emulated/0/Download',
+          '/storage/emulated/0/Downloads',
+          '/storage/emulated/0/Audio',
+          '/storage/emulated/0/Musics',
+        ];
         
-        // /storage/emulated/0/Download (pour les musiques téléchargées)
-        final downloadDir = Directory('/storage/emulated/0/Download');
-        if (await downloadDir.exists()) {
-          directories.add(downloadDir);
+        for (final path in paths) {
+          final dir = Directory(path);
+          if (await dir.exists()) {
+            // Résout le chemin réel pour éviter les symlinks
+            final realPath = await dir.resolveSymbolicLinks();
+            if (!addedPaths.contains(realPath)) {
+              directories.add(dir);
+              addedPaths.add(realPath);
+              print('✓ Directory found: $path');
+            }
+          } else {
+            print('✗ Directory not found: $path');
+          }
         }
       }
       
@@ -99,13 +121,20 @@ class LocalMusicDataSourceImpl implements LocalMusicDataSource {
         final appDir = await getApplicationDocumentsDirectory();
         final appMusicDir = Directory('${appDir.path}/Music');
         if (await appMusicDir.exists()) {
-          directories.add(appMusicDir);
+          final realPath = await appMusicDir.resolveSymbolicLinks();
+          if (!addedPaths.contains(realPath)) {
+            directories.add(appMusicDir);
+            addedPaths.add(realPath);
+            print('✓ App directory found: ${appMusicDir.path}');
+          }
         }
       } catch (e) {
-        // Ignore si on ne peut pas accéder au répertoire de l'app
+        print('✗ Error accessing app directory: $e');
       }
+      
+      print('📁 Total directories to scan: ${directories.length}');
     } catch (e) {
-      // En cas d'erreur, retourne au moins un répertoire vide
+      print('❌ Error searching directories: $e');
     }
     
     return directories;
@@ -114,15 +143,20 @@ class LocalMusicDataSourceImpl implements LocalMusicDataSource {
   /// Scanne récursivement un répertoire pour trouver les fichiers audio
   Future<void> _scanDirectory(Directory directory, List<SongModel> songs) async {
     try {
+      int fileCount = 0;
       await for (final entity in directory.list(recursive: true, followLinks: false)) {
         if (entity is File && _isAudioFile(entity.path)) {
+          fileCount++;
           final song = await _createSongFromFile(entity);
           if (song != null) {
             songs.add(song);
+            print('  ♪ ${song.title} - ${song.artist ?? "Inconnu"}');
           }
         }
       }
+      print('  → $fileCount fichiers audio trouvés dans ${directory.path}');
     } catch (e) {
+      print('  ⚠️ Erreur de scan dans ${directory.path}: $e');
       // Ignore les erreurs de permission sur certains dossiers
     }
   }

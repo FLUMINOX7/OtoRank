@@ -34,7 +34,7 @@ class PlaylistListWidget extends StatelessWidget {
                   onPressed: () {
                     context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
                   },
-                  child: const Text('Réessayer'),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
@@ -42,78 +42,103 @@ class PlaylistListWidget extends StatelessWidget {
         }
 
         if (state is PlaylistsLoaded) {
-          if (state.playlists.isEmpty && state.rankedPlaylists.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.playlist_add, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('Aucune playlist'),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _showCreatePlaylistDialog(context),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Créer une playlist'),
-                  ),
-                ],
-              ),
-            );
-          }
-
           return RefreshIndicator(
             onRefresh: () async {
               context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
             },
             child: ListView(
               children: [
-                // Playlists Ranked
-                if (state.rankedPlaylists.isNotEmpty) ...[
+                // Section Ranked Playlists (toujours affichée)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Ranked Playlists',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: () => _showCreateRankedPlaylistDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('New'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (state.rankedPlaylists.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Playlists Classées',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            'No ranked playlists yet',
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
                         ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => _showCreateRankedPlaylistDialog(context),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  )
+                else
                   ...state.rankedPlaylists.map((rp) => _buildRankedPlaylistTile(context, rp)),
-                ],
                 
-                // Playlists Normales
-                if (state.playlists.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                
+                // Section Playlists Normales (toujours affichée)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.playlist_play),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Normal Playlists',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: () => _showCreatePlaylistDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('New'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (state.playlists.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Playlists',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            'No normal playlists yet',
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
                         ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => _showCreatePlaylistDialog(context),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  )
+                else
                   ...state.playlists.map((p) => _buildPlaylistTile(context, p)),
-                ],
+                
+                const SizedBox(height: 80), // Espace pour le mini-player
               ],
             ),
           );
@@ -137,12 +162,83 @@ class PlaylistListWidget extends StatelessWidget {
           ),
         ),
         title: Text(playlist.name),
-        subtitle: Text('${playlist.songCount} chanson(s)'),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'open':
+                Navigator.pushNamed(
+                  context,
+                  '/playlist-detail',
+                  arguments: {
+                    'playlistId': playlist.id,
+                    'isRanked': true,
+                  },
+                );
+                break;
+              case 'rename':
+                _showRenameDialog(context, playlist);
+                break;
+              case 'change_rank':
+                _showChangeRankDialog(context, playlist, rankedPlaylist.rank);
+                break;
+              case 'delete':
+                _showDeleteDialog(context, playlist);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'open',
+              child: Row(
+                children: [
+                  Icon(Icons.open_in_new),
+                  SizedBox(width: 8),
+                  Text('Open'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'rename',
+              child: Row(
+                children: [
+                  Icon(Icons.edit),
+                  SizedBox(width: 8),
+                  Text('Rename'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'change_rank',
+              child: Row(
+                children: [
+                  Icon(Icons.star),
+                  SizedBox(width: 8),
+                  Text('Change Rank'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Delete', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
         onTap: () {
-          // TODO: Ouvrir la playlist
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Playlist: ${playlist.name}')),
+          Navigator.pushNamed(
+            context,
+            '/playlist-detail',
+            arguments: {
+              'playlistId': playlist.id,
+              'isRanked': true,
+            },
           );
         },
       ),
@@ -157,12 +253,70 @@ class PlaylistListWidget extends StatelessWidget {
           child: Icon(Icons.playlist_play),
         ),
         title: Text(playlist.name),
-        subtitle: Text('${playlist.songCount} chanson(s)'),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'open':
+                Navigator.pushNamed(
+                  context,
+                  '/playlist-detail',
+                  arguments: {
+                    'playlistId': playlist.id,
+                    'isRanked': false,
+                  },
+                );
+                break;
+              case 'rename':
+                _showRenameDialog(context, playlist);
+                break;
+              case 'delete':
+                _showDeleteDialog(context, playlist);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'open',
+              child: Row(
+                children: [
+                  Icon(Icons.open_in_new),
+                  SizedBox(width: 8),
+                  Text('Open'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'rename',
+              child: Row(
+                children: [
+                  Icon(Icons.edit),
+                  SizedBox(width: 8),
+                  Text('Rename'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Delete', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
         onTap: () {
-          // TODO: Ouvrir la playlist
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Playlist: ${playlist.name}')),
+          Navigator.pushNamed(
+            context,
+            '/playlist-detail',
+            arguments: {
+              'playlistId': playlist.id,
+              'isRanked': false,
+            },
           );
         },
       ),
@@ -192,19 +346,19 @@ class PlaylistListWidget extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Nouvelle Playlist'),
+        title: const Text('New Playlist'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
-            labelText: 'Nom de la playlist',
-            hintText: 'Ma playlist',
+            labelText: 'Playlist name',
+            hintText: 'My playlist',
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -215,7 +369,7 @@ class PlaylistListWidget extends StatelessWidget {
                 Navigator.pop(dialogContext);
               }
             },
-            child: const Text('Créer'),
+            child: const Text('Create'),
           ),
         ],
       ),
@@ -230,15 +384,15 @@ class PlaylistListWidget extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Nouvelle Playlist Classée'),
+          title: const Text('New Ranked Playlist'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Nom de la playlist',
-                  hintText: 'Ma playlist',
+                  labelText: 'Playlist name',
+                  hintText: 'My playlist',
                 ),
                 autofocus: true,
               ),
@@ -246,7 +400,7 @@ class PlaylistListWidget extends StatelessWidget {
               DropdownButtonFormField<String>(
                 value: selectedRank,
                 decoration: const InputDecoration(
-                  labelText: 'Rang',
+                  labelText: 'Rank',
                 ),
                 items: PlaylistRank.defaultRanks.keys.map((rank) {
                   return DropdownMenuItem(
@@ -265,7 +419,7 @@ class PlaylistListWidget extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Annuler'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -279,10 +433,170 @@ class PlaylistListWidget extends StatelessWidget {
                   Navigator.pop(dialogContext);
                 }
               },
-              child: const Text('Créer'),
+              child: const Text('Create'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, dynamic playlist) {
+    final nameController = TextEditingController(text: playlist.name);
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Rename Playlist'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Playlist Name',
+            hintText: 'My playlist',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty && nameController.text != playlist.name) {
+                // Update playlist name
+                final updatedPlaylist = playlist.copyWith(
+                  name: nameController.text,
+                  modifiedDate: DateTime.now(),
+                );
+                
+                context.read<PlaylistBloc>().musicRepository.updatePlaylist(updatedPlaylist).then((result) {
+                  result.fold(
+                    (failure) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${failure.message}')),
+                      );
+                    },
+                    (_) {
+                      context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
+                    },
+                  );
+                });
+                Navigator.pop(dialogContext);
+              }
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangeRankDialog(BuildContext context, dynamic playlist, String currentRank) {
+    String selectedRank = currentRank;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Change Rank'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Playlist: ${playlist.name}'),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedRank,
+                decoration: const InputDecoration(
+                  labelText: 'Rank',
+                ),
+                items: PlaylistRank.defaultRanks.keys.map((rank) {
+                  return DropdownMenuItem(
+                    value: rank,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: _getRankColor(rank),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              rank,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(rank),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => selectedRank = value);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedRank != currentRank) {
+                  context.read<PlaylistBloc>().add(
+                        UpdatePlaylistRankEvent(
+                          playlistId: playlist.id,
+                          newRank: selectedRank,
+                        ),
+                      );
+                }
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Change'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, dynamic playlist) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Playlist'),
+        content: Text('Are you sure you want to delete "${playlist.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () {
+              context.read<PlaylistBloc>().add(DeletePlaylistEvent(playlist.id));
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Playlist "${playlist.name}" deleted')),
+              );
+            },
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

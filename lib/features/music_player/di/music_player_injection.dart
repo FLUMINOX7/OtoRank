@@ -16,6 +16,9 @@ import '../domain/usecases/get_all_playlists.dart';
 import '../domain/usecases/get_ranked_playlists.dart';
 import '../domain/usecases/play_song.dart';
 import '../domain/usecases/load_playlist.dart';
+import '../domain/usecases/add_songs_to_playlist.dart';
+import '../domain/usecases/add_songs_to_ranked_playlist.dart';
+import '../domain/usecases/remove_songs_from_playlist.dart';
 import '../presentation/bloc/music_player_bloc.dart';
 import '../presentation/bloc/playlist_bloc.dart';
 
@@ -39,6 +42,9 @@ Future<void> initMusicPlayerDependencies() async {
       createPlaylist: sl(),
       createRankedPlaylist: sl(),
       updatePlaylistRank: sl(),
+      addSongsToPlaylist: sl(),
+      removeSongsFromPlaylist: sl(),
+      getLocalSongs: sl(),
       musicRepository: sl(),
     ),
   );
@@ -52,6 +58,9 @@ Future<void> initMusicPlayerDependencies() async {
   sl.registerLazySingleton(() => GetRankedPlaylists(sl()));
   sl.registerLazySingleton(() => PlaySong(sl()));
   sl.registerLazySingleton(() => LoadPlaylist(sl()));
+  sl.registerLazySingleton(() => AddSongsToPlaylist(sl()));
+  sl.registerLazySingleton(() => AddSongsToRankedPlaylist(sl()));
+  sl.registerLazySingleton(() => RemoveSongsFromPlaylist(sl()));
 
   // Repositories
   sl.registerLazySingleton<MusicRepository>(

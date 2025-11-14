@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/music_player/presentation/pages/music_player_page.dart';
+import '../../features/music_player/presentation/pages/playlist_detail_page.dart';
 import '../../features/youtube_downloader/presentation/pages/youtube_downloader_page.dart';
 import '../../features/notes/presentation/pages/notes_page.dart';
 import '../../features/audio_editor/presentation/pages/audio_editor_page.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
   // Noms des routes
   static const String home = '/';
   static const String musicPlayer = '/music-player';
+  static const String playlistDetail = '/playlist-detail';
   static const String youtubeDownloader = '/youtube-downloader';
   static const String notes = '/notes';
   static const String audioEditor = '/audio-editor';
@@ -34,14 +36,18 @@ class AppRoutes {
   
   /// Générateur de routes pour gérer les routes dynamiques
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    // Vous pouvez gérer ici les routes avec paramètres
-    // Exemple:
-    // if (settings.name == '/details') {
-    //   final args = settings.arguments as DetailsArguments;
-    //   return MaterialPageRoute(
-    //     builder: (context) => DetailsPage(args: args),
-    //   );
-    // }
+    // Handle playlist detail route with parameters
+    if (settings.name == playlistDetail) {
+      final args = settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        return MaterialPageRoute(
+          builder: (context) => PlaylistDetailPage(
+            playlistId: args['playlistId'] as String,
+            isRankedPlaylist: args['isRanked'] as bool? ?? false,
+          ),
+        );
+      }
+    }
     
     return null; // Route non trouvée
   }
@@ -54,7 +60,7 @@ class AppRoutes {
           title: const Text('Erreur'),
         ),
         body: Center(
-          child: Text('Page non trouvée: ${settings.name}'),
+          child: Text('Page not found: ${settings.name}'),
         ),
       ),
     );

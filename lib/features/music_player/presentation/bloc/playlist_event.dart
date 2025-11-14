@@ -62,6 +62,15 @@ class UpdatePlaylistRankEvent extends PlaylistEvent {
   List<Object?> get props => [playlistId, newRank];
 }
 
+class UpdatePlaylistEvent extends PlaylistEvent {
+  final Playlist playlist;
+
+  const UpdatePlaylistEvent(this.playlist);
+
+  @override
+  List<Object?> get props => [playlist];
+}
+
 class AddSongToPlaylistEvent extends PlaylistEvent {
   final String playlistId;
   final Song song;
@@ -73,6 +82,19 @@ class AddSongToPlaylistEvent extends PlaylistEvent {
 
   @override
   List<Object?> get props => [playlistId, song];
+}
+
+class AddSongsToPlaylistEvent extends PlaylistEvent {
+  final String playlistId;
+  final List<Song> songs;
+
+  const AddSongsToPlaylistEvent({
+    required this.playlistId,
+    required this.songs,
+  });
+
+  @override
+  List<Object?> get props => [playlistId, songs];
 }
 
 class RemoveSongFromPlaylistEvent extends PlaylistEvent {
