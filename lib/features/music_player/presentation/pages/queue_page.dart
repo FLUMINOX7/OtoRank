@@ -17,12 +17,17 @@ class QueuePage extends StatelessWidget {
     
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
       listener: (context, state) {
-        // Auto-close page when queue is cleared
+        // Si la queue est vide après clear, revenir explicitement à la MusicPlayerPage et refresh
         if (state is MusicPlayerStopped || state.queue.isEmpty) {
-          // Add a small delay to show the snackbar
           Future.delayed(const Duration(milliseconds: 300), () {
             if (context.mounted) {
-              Navigator.pop(context);
+              Navigator.of(context).pushNamedAndRemoveUntil('/music-player', (route) => false);
+              // Déclenche le refresh sur la page principale
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  context.read<MusicPlayerBloc>().add(GetCurrentQueueEvent());
+                }
+              });
             }
           });
         }
