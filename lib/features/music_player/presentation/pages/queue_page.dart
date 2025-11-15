@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/music_player_bloc.dart';
 import '../bloc/music_player_event.dart';
 import '../bloc/music_player_state.dart';
-import '../../domain/entities/song.dart';
 
 /// Page affichant la queue de lecture avec drag-to-reorder
 class QueuePage extends StatelessWidget {
@@ -16,51 +15,70 @@ class QueuePage extends StatelessWidget {
     // Load current queue on page open
     context.read<MusicPlayerBloc>().add(GetCurrentQueueEvent());
     
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Queue'),
-        actions: [
-          BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
-            builder: (context, state) {
-              final hasQueue = state.queue.isNotEmpty;
-              
-              return IconButton(
-                icon: const Icon(Icons.clear_all),
-                tooltip: 'Clear queue',
-                onPressed: hasQueue
-                    ? () {
-                        showDialog(
-                          context: context,
-                          builder: (dialogContext) => AlertDialog(
-                            title: const Text('Clear Queue'),
-                            content: const Text('Are you sure you want to clear the entire queue?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogContext),
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  context.read<MusicPlayerBloc>().add(ClearQueueEvent());
-                                  Navigator.pop(dialogContext);
-                                  Navigator.pop(context);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+    return BlocListener<MusicPlayerBloc, MusicPlayerState>(
+      listener: (context, state) {
+        // Auto-close page when queue is cleared
+        if (state is MusicPlayerStopped || state.queue.isEmpty) {
+          // Add a small delay to show the snackbar
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (context.mounted) {
+              Navigator.pop(context);
+            }
+          });
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Queue'),
+          actions: [
+            BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
+              builder: (context, state) {
+                final hasQueue = state.queue.isNotEmpty;
+                
+                return IconButton(
+                  icon: const Icon(Icons.clear_all),
+                  tooltip: 'Clear queue',
+                  onPressed: hasQueue
+                      ? () {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Clear Queue'),
+                              content: const Text('Are you sure you want to clear the entire queue?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  child: const Text('Cancel'),
                                 ),
-                                child: const Text('Clear'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    : null,
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
+                                ElevatedButton(
+                                  onPressed: () {
+                                    context.read<MusicPlayerBloc>().add(ClearQueueEvent());
+                                    Navigator.pop(dialogContext);
+                                    
+                                    // Show confirmation snackbar
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Queue cleared'),
+                                        duration: Duration(milliseconds: 500),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Clear'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      : null,
+                );
+              },
+            ),
+          ],
+        ),
+        body: BlocBuilder<MusicPlayerBloc, MusicPlayerState>(
         builder: (context, state) {
           final currentSong = state.currentSong;
           final queue = state.queue;
@@ -250,6 +268,7 @@ class QueuePage extends StatelessWidget {
             ],
           );
         },
+      ),
       ),
     );
   }
