@@ -24,6 +24,13 @@ class MusicPlayerPage extends StatefulWidget {
 }
 
 class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh songs and playlists when returning to main page
+    context.read<MusicPlayerBloc>().add(GetCurrentQueueEvent());
+    context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
+  }
   late TabController _tabController;
   bool _permissionsGranted = false;
 
