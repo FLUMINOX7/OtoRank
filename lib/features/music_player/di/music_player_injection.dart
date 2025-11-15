@@ -2,8 +2,10 @@ library;
 
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/datasources/local_music_datasource.dart';
 import '../data/datasources/playlist_local_datasource.dart';
+import '../data/datasources/player_state_local_data_source.dart';
 import '../data/repositories/music_repository_impl.dart';
 import '../data/repositories/audio_player_repository_impl.dart';
 import '../domain/repositories/music_repository.dart';
@@ -32,6 +34,7 @@ Future<void> initMusicPlayerDependencies() async {
       playSong: sl(),
       loadPlaylist: sl(),
       audioPlayerRepository: sl(),
+      playerStateLocalDataSource: sl(),
     ),
   );
 
@@ -82,6 +85,11 @@ Future<void> initMusicPlayerDependencies() async {
   sl.registerLazySingleton<PlaylistLocalDataSource>(
     () => PlaylistLocalDataSourceImpl(),
   );
+
+  // Player state persistence
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton(() => PlayerStateLocalDataSource(sl()));
 
   // External
   sl.registerLazySingleton(() => AudioPlayer());

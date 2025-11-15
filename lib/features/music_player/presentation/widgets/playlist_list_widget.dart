@@ -153,84 +153,9 @@ class PlaylistListWidget extends StatelessWidget {
     final playlist = rankedPlaylist.playlist;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _getRankColor(rankedPlaylist.rank),
-          child: Text(
-            rankedPlaylist.rank,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        title: Text(playlist.name),
-        subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
-        trailing: PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert),
-          onSelected: (value) {
-            switch (value) {
-              case 'open':
-                Navigator.pushNamed(
-                  context,
-                  '/playlist-detail',
-                  arguments: {
-                    'playlistId': playlist.id,
-                    'isRanked': true,
-                  },
-                );
-                break;
-              case 'rename':
-                _showRenameDialog(context, playlist);
-                break;
-              case 'change_rank':
-                _showChangeRankDialog(context, playlist, rankedPlaylist.rank);
-                break;
-              case 'delete':
-                _showDeleteDialog(context, playlist);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'open',
-              child: Row(
-                children: [
-                  Icon(Icons.open_in_new),
-                  SizedBox(width: 8),
-                  Text('Open'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'rename',
-              child: Row(
-                children: [
-                  Icon(Icons.edit),
-                  SizedBox(width: 8),
-                  Text('Rename'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'change_rank',
-              child: Row(
-                children: [
-                  Icon(Icons.star),
-                  SizedBox(width: 8),
-                  Text('Change Rank'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
+      elevation: 3,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.pushNamed(
             context,
@@ -241,6 +166,94 @@ class PlaylistListWidget extends StatelessWidget {
             },
           );
         },
+        child: ListTile(
+          leading: Hero(
+            tag: 'playlist-${playlist.id}',
+            child: CircleAvatar(
+              backgroundColor: _getRankColor(rankedPlaylist.rank),
+              child: Text(
+                rankedPlaylist.rank,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            playlist.name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
+          trailing: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'open':
+                  Navigator.pushNamed(
+                    context,
+                    '/playlist-detail',
+                    arguments: {
+                      'playlistId': playlist.id,
+                      'isRanked': true,
+                    },
+                  );
+                  break;
+                case 'rename':
+                  _showRenameDialog(context, playlist);
+                  break;
+                case 'change_rank':
+                  _showChangeRankDialog(context, playlist, rankedPlaylist.rank);
+                  break;
+                case 'delete':
+                  _showDeleteDialog(context, playlist);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'open',
+                child: Row(
+                  children: [
+                    Icon(Icons.open_in_new),
+                    SizedBox(width: 8),
+                    Text('Open'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'rename',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit),
+                    SizedBox(width: 8),
+                    Text('Rename'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'change_rank',
+                child: Row(
+                  children: [
+                    Icon(Icons.star),
+                    SizedBox(width: 8),
+                    Text('Change Rank'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -248,67 +261,9 @@ class PlaylistListWidget extends StatelessWidget {
   Widget _buildPlaylistTile(BuildContext context, playlist) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.playlist_play),
-        ),
-        title: Text(playlist.name),
-        subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
-        trailing: PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert),
-          onSelected: (value) {
-            switch (value) {
-              case 'open':
-                Navigator.pushNamed(
-                  context,
-                  '/playlist-detail',
-                  arguments: {
-                    'playlistId': playlist.id,
-                    'isRanked': false,
-                  },
-                );
-                break;
-              case 'rename':
-                _showRenameDialog(context, playlist);
-                break;
-              case 'delete':
-                _showDeleteDialog(context, playlist);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'open',
-              child: Row(
-                children: [
-                  Icon(Icons.open_in_new),
-                  SizedBox(width: 8),
-                  Text('Open'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'rename',
-              child: Row(
-                children: [
-                  Icon(Icons.edit),
-                  SizedBox(width: 8),
-                  Text('Rename'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.pushNamed(
             context,
@@ -319,6 +274,78 @@ class PlaylistListWidget extends StatelessWidget {
             },
           );
         },
+        child: ListTile(
+          leading: Hero(
+            tag: 'playlist-${playlist.id}',
+            child: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              child: Icon(
+                Icons.playlist_play,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+          title: Text(
+            playlist.name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
+          trailing: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'open':
+                  Navigator.pushNamed(
+                    context,
+                    '/playlist-detail',
+                    arguments: {
+                      'playlistId': playlist.id,
+                      'isRanked': false,
+                    },
+                  );
+                  break;
+                case 'rename':
+                  _showRenameDialog(context, playlist);
+                  break;
+                case 'delete':
+                  _showDeleteDialog(context, playlist);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'open',
+                child: Row(
+                  children: [
+                    Icon(Icons.open_in_new),
+                    SizedBox(width: 8),
+                    Text('Open'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'rename',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit),
+                    SizedBox(width: 8),
+                    Text('Rename'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -29,6 +29,18 @@ abstract class AudioPlayerRepository {
   /// Charge une liste de chansons (queue)
   Future<Either<Failure, void>> loadPlaylist(List<Song> songs, {int startIndex = 0});
 
+  /// Récupère la queue actuelle
+  List<Song> getCurrentQueue();
+
+  /// Réordonne la queue
+  Future<Either<Failure, void>> reorderQueue(int oldIndex, int newIndex);
+
+  /// Retire une chanson de la queue
+  Future<Either<Failure, void>> removeFromQueue(int index);
+
+  /// Vide la queue
+  Future<Either<Failure, void>> clearQueue();
+
   /// Met en pause la lecture
   Future<Either<Failure, void>> pause();
 
@@ -76,6 +88,9 @@ abstract class AudioPlayerRepository {
 
   /// Récupère le mode repeat
   Stream<RepeatMode> get repeatModeStream;
+
+  /// Récupère la chanson courante (synchrone)
+  Song? get currentSong;
 
   /// Libère les ressources
   Future<void> dispose();

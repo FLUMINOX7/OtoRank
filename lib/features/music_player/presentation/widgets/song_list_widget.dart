@@ -129,37 +129,78 @@ class _SongListWidgetState extends State<SongListWidget> {
               itemCount: _songs!.length,
               itemBuilder: (context, index) {
                 final song = _songs![index];
-                return ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.music_note),
-                  ),
-                  title: Text(song.title),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.info_outline),
-                        onPressed: () {
-                          // TODO: Show song details dialog
-                        },
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  elevation: 2,
+                  child: ListTile(
+                    leading: Hero(
+                      tag: 'song-icon-${song.id}',
+                      child: CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.music_note,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.play_arrow),
-                        onPressed: () {
-                          // Load whole playlist and play selected song
-                          context.read<MusicPlayerBloc>().add(
-                                LoadPlaylistEvent(_songs!, startIndex: index),
-                              );
-                        },
-                      ),
-                    ],
+                    ),
+                    title: Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: song.artist != null
+                        ? Text(
+                            song.artist!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          )
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          iconSize: 20,
+                          tooltip: 'Song details',
+                          onPressed: () {
+                            // TODO: Show song details dialog
+                          },
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: () {
+                              context.read<MusicPlayerBloc>().add(
+                                    LoadPlaylistEvent(_songs!, startIndex: index),
+                                  );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.play_arrow,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      context.read<MusicPlayerBloc>().add(
+                            LoadPlaylistEvent(_songs!, startIndex: index),
+                          );
+                    },
                   ),
-                  onTap: () {
-                    // Load whole playlist and play selected song
-                    context.read<MusicPlayerBloc>().add(
-                          LoadPlaylistEvent(_songs!, startIndex: index),
-                        );
-                  },
                 );
               },
             ),

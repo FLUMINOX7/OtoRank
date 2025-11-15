@@ -77,6 +77,10 @@ dev_dependencies:
   # Linter
   flutter_lints: ^4.0.0
   
+  # Testing
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+  
   # Launcher icons generator
   flutter_launcher_icons: ^0.13.1
 

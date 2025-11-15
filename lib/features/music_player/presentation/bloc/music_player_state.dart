@@ -14,6 +14,7 @@ abstract class MusicPlayerState extends Equatable {
   final RepeatMode repeatMode;
   final double volume;
   final double playbackSpeed;
+  final List<Song> queue;
 
   const MusicPlayerState({
     this.currentSong,
@@ -24,6 +25,7 @@ abstract class MusicPlayerState extends Equatable {
     this.repeatMode = RepeatMode.off,
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
+    this.queue = const [],
   });
 
   @override
@@ -36,14 +38,21 @@ abstract class MusicPlayerState extends Equatable {
         repeatMode,
         volume,
         playbackSpeed,
+        queue,
       ];
 }
 
 class MusicPlayerInitial extends MusicPlayerState {
-  const MusicPlayerInitial()
-      : super(
+  final int timestamp;
+  
+  MusicPlayerInitial()
+      : timestamp = DateTime.now().millisecondsSinceEpoch,
+        super(
           playbackState: PlaybackState.stopped,
         );
+
+  @override
+  List<Object?> get props => [...super.props, timestamp];
 }
 
 class MusicPlayerPlaying extends MusicPlayerState {
@@ -55,6 +64,7 @@ class MusicPlayerPlaying extends MusicPlayerState {
     required super.repeatMode,
     required super.volume,
     required super.playbackSpeed,
+    required super.queue,
   }) : super(
           playbackState: PlaybackState.playing,
         );
@@ -69,16 +79,24 @@ class MusicPlayerPaused extends MusicPlayerState {
     required super.repeatMode,
     required super.volume,
     required super.playbackSpeed,
+    required super.queue,
   }) : super(
           playbackState: PlaybackState.paused,
         );
 }
 
 class MusicPlayerStopped extends MusicPlayerState {
-  const MusicPlayerStopped()
-      : super(
+  final int timestamp;
+  
+  MusicPlayerStopped()
+      : timestamp = DateTime.now().millisecondsSinceEpoch,
+        super(
           playbackState: PlaybackState.stopped,
+          queue: const [],
         );
+
+  @override
+  List<Object?> get props => [...super.props, timestamp];
 }
 
 class MusicPlayerLoading extends MusicPlayerState {
@@ -88,6 +106,7 @@ class MusicPlayerLoading extends MusicPlayerState {
     required super.repeatMode,
     required super.volume,
     required super.playbackSpeed,
+    required super.queue,
   }) : super(
           playbackState: PlaybackState.loading,
         );
@@ -106,6 +125,7 @@ class MusicPlayerError extends MusicPlayerState {
     required super.repeatMode,
     required super.volume,
     required super.playbackSpeed,
+    required super.queue,
   });
 
   @override

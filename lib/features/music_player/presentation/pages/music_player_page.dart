@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../shared/widgets/app_drawer.dart';
+import '../bloc/music_player_bloc.dart';
+import '../bloc/music_player_event.dart';
 import '../bloc/playlist_bloc.dart';
 import '../bloc/playlist_event.dart';
 import '../widgets/mini_player_widget.dart';
@@ -21,7 +23,7 @@ class MusicPlayerPage extends StatefulWidget {
   State<MusicPlayerPage> createState() => _MusicPlayerPageState();
 }
 
-class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProviderStateMixin {
+class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   bool _permissionsGranted = false;
 
@@ -30,6 +32,24 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _requestPermissions();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Save player state when app goes to background
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      context.read<MusicPlayerBloc>().add(SavePlayerStateEvent());
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -107,16 +127,46 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Music Player'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () {
+              Navigator.pushNamed(context, '/search');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.queue_music),
+            tooltip: 'Queue',
+            onPressed: () {
+              Navigator.pushNamed(context, '/queue');
+            },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'equalizer') {
+                Navigator.pushNamed(context, '/equalizer');
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'equalizer',
+                child: Row(
+                  children: [
+                    Icon(Icons.graphic_eq),
+                    SizedBox(width: 12),
+                    Text('Equalizer'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
