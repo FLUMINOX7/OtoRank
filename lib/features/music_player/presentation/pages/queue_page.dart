@@ -17,11 +17,12 @@ class QueuePage extends StatelessWidget {
     
     return BlocListener<MusicPlayerBloc, MusicPlayerState>(
       listener: (context, state) {
-        // Si la queue est vide après clear, revenir à la page principale
+        // Auto-close page when queue is cleared
         if (state is MusicPlayerStopped || state.queue.isEmpty) {
+          // Add a small delay to show the snackbar
           Future.delayed(const Duration(milliseconds: 300), () {
             if (context.mounted) {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pop(context);
             }
           });
         }
@@ -83,27 +84,20 @@ class QueuePage extends StatelessWidget {
           final queue = state.queue;
           
           if (queue.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.queue_music, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
+                  Icon(Icons.queue_music, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
                     'Queue is empty',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Play a song to start',
                     style: TextStyle(color: Colors.grey),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<MusicPlayerBloc>().add(GetCurrentQueueEvent());
-                    },
-                    child: const Text('Refresh'),
                   ),
                 ],
               ),
