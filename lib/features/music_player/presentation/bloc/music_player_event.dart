@@ -121,3 +121,36 @@ class DurationChangedEvent extends MusicPlayerEvent {
   @override
   List<Object?> get props => [duration];
 }
+
+/// Event to restore saved player state on app start
+class RestorePlayerStateEvent extends MusicPlayerEvent {}
+
+/// Event to save current player state
+class SavePlayerStateEvent extends MusicPlayerEvent {}
+
+/// Event to get current queue
+class GetCurrentQueueEvent extends MusicPlayerEvent {}
+
+/// Event to reorder queue
+class ReorderQueueEvent extends MusicPlayerEvent {
+  final int oldIndex;
+  final int newIndex;
+
+  const ReorderQueueEvent(this.oldIndex, this.newIndex);
+
+  @override
+  List<Object?> get props => [oldIndex, newIndex];
+}
+
+/// Event to remove song from queue
+class RemoveFromQueueEvent extends MusicPlayerEvent {
+  final int index;
+
+  const RemoveFromQueueEvent(this.index);
+
+  @override
+  List<Object?> get props => [index];
+}
+
+/// Event to clear queue
+class ClearQueueEvent extends MusicPlayerEvent {}

@@ -118,6 +118,105 @@ class AudioPlayerRepositoryImpl implements AudioPlayerRepository {
   }
 
   @override
+  List<Song> getCurrentQueue() {
+    return List.unmodifiable(_currentPlaylist);
+  }
+
+  @override
+  Future<Either<Failure, void>> reorderQueue(int oldIndex, int newIndex) async {
+    try {
+      if (oldIndex < 0 || oldIndex >= _currentPlaylist.length ||
+          newIndex < 0 || newIndex >= _currentPlaylist.length) {
+        return Left(PlayerFailure(message: 'Index invalide'));
+      }
+
+      // Réordonne la liste
+      final song = _currentPlaylist.removeAt(oldIndex);
+      _currentPlaylist.insert(newIndex, song);
+
+      // Recrée la source audio avec le nouvel ordre
+      final playlist = ConcatenatingAudioSource(
+        children: _currentPlaylist.map((song) {
+          return AudioSource.file(song.filePath);
+        }).toList(),
+      );
+
+      final currentIndex = _audioPlayer.currentIndex ?? 0;
+      final currentPosition = _audioPlayer.position;
+
+      await _audioPlayer.setAudioSource(
+        playlist,
+        initialIndex: currentIndex,
+        initialPosition: currentPosition,
+      );
+
+      return const Right(null);
+    } catch (e) {
+      return Left(PlayerFailure(message: 'Erreur lors du réordonnancement: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeFromQueue(int index) async {
+    try {
+      if (index < 0 || index >= _currentPlaylist.length) {
+        return Left(PlayerFailure(message: 'Index invalide'));
+      }
+
+      if (_currentPlaylist.length == 1) {
+        return clearQueue();
+      }
+
+      final currentIndex = _audioPlayer.currentIndex ?? 0;
+      
+      // Si on supprime la chanson actuelle, passer à la suivante
+      if (index == currentIndex) {
+        if (index < _currentPlaylist.length - 1) {
+          await skipToNext();
+        } else if (index > 0) {
+          await skipToPrevious();
+        }
+      }
+
+      _currentPlaylist.removeAt(index);
+
+      // Recrée la source audio
+      final playlist = ConcatenatingAudioSource(
+        children: _currentPlaylist.map((song) {
+          return AudioSource.file(song.filePath);
+        }).toList(),
+      );
+
+      final newIndex = _audioPlayer.currentIndex ?? 0;
+      final currentPosition = _audioPlayer.position;
+
+      await _audioPlayer.setAudioSource(
+        playlist,
+        initialIndex: newIndex.clamp(0, _currentPlaylist.length - 1),
+        initialPosition: currentPosition,
+      );
+
+      return const Right(null);
+    } catch (e) {
+      return Left(PlayerFailure(message: 'Erreur lors de la suppression: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> clearQueue() async {
+    try {
+      await _audioPlayer.stop();
+      _currentPlaylist.clear();
+      _currentSong = null;
+      _currentSongController.add(null);
+      _playbackStateController.add(PlaybackState.stopped);
+      return const Right(null);
+    } catch (e) {
+      return Left(PlayerFailure(message: 'Erreur lors du vidage de la queue: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> pause() async {
     try {
       await _audioPlayer.pause();
@@ -276,6 +375,9 @@ class AudioPlayerRepositoryImpl implements AudioPlayerRepository {
 
   @override
   Stream<RepeatMode> get repeatModeStream => _repeatModeController.stream;
+
+  @override
+  Song? get currentSong => _currentSong;
 
   @override
   Future<void> dispose() async {

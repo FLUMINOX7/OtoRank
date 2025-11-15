@@ -8,6 +8,10 @@ import 'package:flutter/material.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/music_player/presentation/pages/music_player_page.dart';
 import '../../features/music_player/presentation/pages/playlist_detail_page.dart';
+import '../../features/music_player/presentation/pages/full_player_page.dart';
+import '../../features/music_player/presentation/pages/queue_page.dart';
+import '../../features/music_player/presentation/pages/search_page.dart';
+import '../../features/music_player/presentation/pages/equalizer_page.dart';
 import '../../features/youtube_downloader/presentation/pages/youtube_downloader_page.dart';
 import '../../features/notes/presentation/pages/notes_page.dart';
 import '../../features/audio_editor/presentation/pages/audio_editor_page.dart';
@@ -19,6 +23,10 @@ class AppRoutes {
   static const String home = '/';
   static const String musicPlayer = '/music-player';
   static const String playlistDetail = '/playlist-detail';
+  static const String fullPlayer = '/full-player';
+  static const String queue = '/queue';
+  static const String search = '/search';
+  static const String equalizer = '/equalizer';
   static const String youtubeDownloader = '/youtube-downloader';
   static const String notes = '/notes';
   static const String audioEditor = '/audio-editor';
@@ -28,6 +36,10 @@ class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     home: (context) => const HomePage(),
     musicPlayer: (context) => const MusicPlayerPage(),
+    fullPlayer: (context) => const FullPlayerPage(),
+    queue: (context) => const QueuePage(),
+    search: (context) => const SearchPage(),
+    equalizer: (context) => const EqualizerPage(),
     youtubeDownloader: (context) => const YouTubeDownloaderPage(),
     notes: (context) => const NotesPage(),
     audioEditor: (context) => const AudioEditorPage(),
