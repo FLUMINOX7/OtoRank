@@ -207,12 +207,61 @@ class MusicRepositoryImpl implements MusicRepository {
       return playlistResult.fold(
         (failure) => Left(failure),
         (playlist) async {
-          final updatedSongs = List<Song>.from(playlist.songs)..add(song);
+          // Avoid duplicates
+          final alreadyPresent = playlist.songs.any((s) => s.id == song.id);
+
+          final updatedSongs = alreadyPresent
+              ? List<Song>.from(playlist.songs)
+              : List<Song>.from(playlist.songs)..add(song);
+
           final updatedPlaylist = playlist.copyWith(
             songs: updatedSongs,
             modifiedDate: DateTime.now(),
           );
-          
+
+          // Propagate to lower-ranked playlists with the same base name
+          try {
+            final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+
+            // Find if this playlist is a ranked playlist
+            RankedPlaylistModel? targetRanked;
+            for (final rp in rankedPlaylists) {
+              if (rp.playlist.id == playlist.id) {
+                targetRanked = rp;
+                break;
+              }
+            }
+
+            if (targetRanked != null) {
+              final targetOrder = targetRanked.rankOrder ?? PlaylistRank.getOrder(targetRanked.rank);
+
+              // For all ranked playlists with same base name and order >= targetOrder,
+              // ensure the song is present (propagate to equal or lower ranks)
+              for (final rp in rankedPlaylists) {
+                final sameName = rp.playlist.name == targetRanked.playlist.name;
+                final rpOrder = rp.rankOrder ?? PlaylistRank.getOrder(rp.rank);
+                if (sameName && rpOrder >= targetOrder) {
+                  final exists = rp.playlist.songs.any((s) => s.id == song.id);
+                  if (!exists) {
+                    final newSongs = List<Song>.from(rp.playlist.songs)..add(song);
+                    final updatedRpPlaylist = PlaylistModel.fromEntity(rp.playlist).copyWith(
+                      songs: newSongs,
+                      modifiedDate: DateTime.now(),
+                    );
+                    final updatedRanked = RankedPlaylistModel(
+                      playlist: updatedRpPlaylist,
+                      rank: rp.rank,
+                      rankOrder: rp.rankOrder,
+                    );
+                    await playlistLocalDataSource.saveRankedPlaylist(updatedRanked);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            // If propagation fails, continue but log via failure return below if needed
+          }
+
           return await updatePlaylist(updatedPlaylist);
         },
       );

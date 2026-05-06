@@ -42,6 +42,18 @@ class PlaylistListWidget extends StatelessWidget {
         }
 
         if (state is PlaylistsLoaded) {
+          // If there are no playlists at all, show a single button to create one
+          if (state.playlists.isEmpty && state.rankedPlaylists.isEmpty) {
+            return Center(
+              child: ElevatedButton.icon(
+                onPressed: () => _showInitialCreateDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Create Playlist'),
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
+              ),
+            );
+          }
+
           return RefreshIndicator(
             onRefresh: () async {
               context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
@@ -146,6 +158,32 @@ class PlaylistListWidget extends StatelessWidget {
 
         return const SizedBox.shrink();
       },
+    );
+  }
+
+  void _showInitialCreateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Create Playlist'),
+        content: const Text('Create a normal playlist or a ranked playlist?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _showCreatePlaylistDialog(context);
+            },
+            child: const Text('Normal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _showCreateRankedPlaylistDialog(context);
+            },
+            child: const Text('Ranked'),
+          ),
+        ],
+      ),
     );
   }
 
