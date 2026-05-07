@@ -11,6 +11,7 @@ import '../bloc/music_player_event.dart';
 import '../bloc/playlist_bloc.dart';
 import '../bloc/playlist_event.dart';
 import '../bloc/playlist_state.dart';
+import '../widgets/mini_player_widget.dart';
 import 'add_songs_to_playlist_sheet.dart';
 
 class PlaylistDetailPage extends StatefulWidget {
@@ -28,6 +29,10 @@ class PlaylistDetailPage extends StatefulWidget {
 }
 
 class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
+  static const Color _phoenixRed = Color(0xFF7A0B16);
+  static const Color _phoenixOrange = Color(0xFFC55A11);
+  static const Color _phoenixPurple = Color(0xFF2E0F4F);
+
   @override
   void initState() {
     super.initState();
@@ -40,8 +45,10 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
 
   Playlist? _findPlaylist(PlaylistState state) {
     if (state is PlaylistLoaded || state is PlaylistsLoaded) {
-      final playlists = state is PlaylistsLoaded 
-          ? [...state.playlists, ...state.rankedPlaylists.map((rp) => rp.playlist)]
+      final playlists = state is PlaylistsLoaded
+          ? widget.isRankedPlaylist
+              ? [...state.rankedPlaylists.map((rp) => rp.playlist), ...state.playlists]
+              : [...state.playlists, ...state.rankedPlaylists.map((rp) => rp.playlist)]
           : (state as PlaylistLoaded).playlists;
 
       return playlists.firstWhere(
@@ -74,6 +81,19 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
         },
       ),
     );
+  }
+
+  void _playPlaylist(List<Song> songs) {
+    if (songs.isEmpty) return;
+
+    final shuffledSongs = List<Song>.from(songs)..shuffle();
+
+    context.read<MusicPlayerBloc>().add(
+          LoadPlaylistEvent(
+            shuffledSongs,
+            startIndex: 0,
+          ),
+        );
   }
 
   void _removeSong(String songId, Playlist playlist) {
@@ -112,6 +132,15 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Playlist Details'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_phoenixRed, _phoenixOrange, _phoenixPurple],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -156,7 +185,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
 
           // Check if this is a ranked playlist
           String? playlistRank;
-          if (state is PlaylistsLoaded) {
+          if (state is PlaylistsLoaded && widget.isRankedPlaylist) {
             final rankedPlaylist = state.rankedPlaylists
                 .firstWhere(
                   (rp) => rp.playlist.id == playlist.id,
@@ -173,229 +202,306 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
           final isRanked = playlistRank != null;
           final songs = playlist.songs;
 
-          return Column(
+          return Stack(
             children: [
-              // Playlist header
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.6),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      isRanked ? Icons.stars : Icons.playlist_play,
-                      size: 64,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      playlist.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black,
+                          _phoenixPurple.withOpacity(0.22),
+                          _phoenixRed.withOpacity(0.18),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
-                    if (isRanked && playlistRank != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getRankColor(playlistRank),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Rank $playlistRank',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: -40,
+                          left: -40,
+                          child: Container(
+                            width: 220,
+                            height: 220,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _phoenixRed.withOpacity(0.18),
+                            ),
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${songs.length} song${songs.length != 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                        Positioned(
+                          top: 120,
+                          right: -30,
+                          child: Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _phoenixOrange.withOpacity(0.14),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: -80,
+                          left: 40,
+                          child: Container(
+                            width: 240,
+                            height: 240,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _phoenixPurple.withOpacity(0.16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-
-              // Action buttons
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: songs.isEmpty
-                            ? null
-                            : () {
-                                context.read<MusicPlayerBloc>().add(
-                                      LoadPlaylistEvent(
-                                        songs,
-                                        startIndex: 0,
-                                      ),
-                                    );
-                              },
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Play All'),
+              Column(
+                children: [
+                  // Playlist header
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [_phoenixRed, _phoenixOrange, _phoenixPurple],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // Get all available songs from the music player state
-                          final playlistState = context.read<PlaylistBloc>().state;
-                          
-                          print('DEBUG: playlistState type: ${playlistState.runtimeType}');
-                          print('DEBUG: allSongs: ${playlistState.allSongs?.length ?? 0} songs');
-                          
-                          if (playlistState.allSongs != null && playlistState.allSongs!.isNotEmpty) {
-                            _showAddSongsSheet(playlistState.allSongs!, playlist);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('No songs available yet. Please wait... (${playlistState.allSongs?.length ?? 0} songs loaded)'),
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Songs'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                    child: Column(
+                      children: [
+                        Icon(
+                          isRanked ? Icons.stars : Icons.playlist_play,
+                          size: 48,
+                          color: Colors.white,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Song list
-              Expanded(
-                child: songs.isEmpty
-                    ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.music_off,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No songs in this playlist',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        Text(
+                          playlist.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: songs.length,
-                        itemBuilder: (context, index) {
-                          final song = songs[index];
-
-                          return Dismissible(
-                            key: Key(song.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              child: const Icon(
-                                Icons.delete,
+                        const SizedBox(height: 6),
+                        if (isRanked)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _phoenixPurple,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Rank $playlistRank',
+                              style: const TextStyle(
                                 color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
                             ),
-                            confirmDismiss: (direction) async {
-                              _removeSong(song.id, playlist);
-                              return false; // Don't auto-dismiss, wait for bloc update
-                            },
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                child: Text('${index + 1}'),
+                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${songs.length} song${songs.length != 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  _phoenixRed.withOpacity(0.28),
+                                  _phoenixOrange.withOpacity(0.2),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              title: Text(song.title),
-                              subtitle: song.artist != null
-                                  ? Text(song.artist!)
-                                  : null,
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (song.duration != null)
-                                    Text(
-                                      _formatDuration(song.duration!),
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: songs.isEmpty ? null : () => _playPlaylist(songs),
+                              icon: const Icon(Icons.shuffle),
+                              label: const Text('Play'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  _phoenixOrange.withOpacity(0.2),
+                                  _phoenixPurple.withOpacity(0.3),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                // Get all available songs from the music player state
+                                final playlistState = context.read<PlaylistBloc>().state;
+                                final availableSongs = playlistState.allSongs ?? <Song>[];
+
+                                if (availableSongs.isNotEmpty) {
+                                  _showAddSongsSheet(availableSongs, playlist);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('No songs available yet. Please wait... (${availableSongs.length} songs loaded)'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Songs'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Song list
+                  Expanded(
+                    child: songs.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.music_off,
+                                  size: 64,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No songs in this playlist',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: songs.length,
+                            itemBuilder: (context, index) {
+                              final song = songs[index];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                elevation: 2,
+                                child: ListTile(
+                                  leading: Hero(
+                                    tag: 'playlist-song-icon-${song.id}',
+                                    child: CircleAvatar(
+                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                      child: Icon(
+                                        Icons.music_note,
+                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                                       ),
                                     ),
-                                  IconButton(
-                                    icon: const Icon(Icons.play_arrow),
-                                    onPressed: () {
-                                      context.read<MusicPlayerBloc>().add(
-                                            LoadPlaylistEvent(
-                                              songs,
-                                              startIndex: index,
-                                            ),
-                                          );
-                                    },
                                   ),
-                                ],
-                              ),
-                              onTap: () {
-                                context.read<MusicPlayerBloc>().add(
-                                      LoadPlaylistEvent(
-                                        songs,
-                                        startIndex: index,
+                                  title: Text(
+                                    song.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: song.artist != null
+                                      ? Text(
+                                          song.artist!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.grey[400],
+                                            fontSize: 12,
+                                          ),
+                                        )
+                                      : null,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (song.duration != null)
+                                        Text(
+                                          _formatDuration(song.duration!),
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(24),
+                                          onTap: () {
+                                            context.read<MusicPlayerBloc>().add(
+                                                  LoadPlaylistEvent(
+                                                    songs,
+                                                    startIndex: index,
+                                                  ),
+                                                );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.play_arrow,
+                                              color: Theme.of(context).colorScheme.primary,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                                    ],
+                                  ),
+                                  onLongPress: () => _removeSong(song.id, playlist),
+                                  onTap: () {
+                                    context.read<MusicPlayerBloc>().add(
+                                          LoadPlaylistEvent(
+                                            songs,
+                                            startIndex: index,
+                                          ),
+                                        );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const MiniPlayerWidget(),
+                ],
               ),
             ],
           );
         },
       ),
     );
-  }
-
-  Color _getRankColor(String rank) {
-    switch (rank.toUpperCase()) {
-      case 'S':
-        return Colors.purple;
-      case 'A':
-        return Colors.red;
-      case 'B':
-        return Colors.orange;
-      case 'C':
-        return Colors.blue;
-      case 'D':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
   }
 
   String _formatDuration(Duration duration) {

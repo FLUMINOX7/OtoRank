@@ -139,33 +139,6 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
               Navigator.pushNamed(context, '/search');
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.queue_music),
-            tooltip: 'Queue',
-            onPressed: () {
-              Navigator.pushNamed(context, '/queue');
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'equalizer') {
-                Navigator.pushNamed(context, '/equalizer');
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'equalizer',
-                child: Row(
-                  children: [
-                    Icon(Icons.graphic_eq),
-                    SizedBox(width: 12),
-                    Text('Equalizer'),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -177,20 +150,11 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
       ),
       drawer: const AppDrawer(),
       body: _permissionsGranted
-          ? Column(
-              children: [
-                // Contenu des tabs
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: const [
-                      SongListWidget(),
-                      PlaylistListWidget(),
-                    ],
-                  ),
-                ),
-                // Mini player en bas (persistant)
-                const MiniPlayerWidget(),
+          ? TabBarView(
+              controller: _tabController,
+              children: const [
+                SongListWidget(),
+                PlaylistListWidget(),
               ],
             )
           : Center(
@@ -211,6 +175,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> with SingleTickerProv
                 ],
               ),
             ),
+      bottomNavigationBar: _permissionsGranted ? const MiniPlayerWidget() : null,
     );
   }
 }

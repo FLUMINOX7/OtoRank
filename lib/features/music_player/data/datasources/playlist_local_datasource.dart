@@ -3,8 +3,6 @@ library;
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/playlist_model.dart';
 import '../models/ranked_playlist_model.dart';
-import '../../domain/entities/song.dart';
-import '../models/song_model.dart';
 import 'package:uuid/uuid.dart';
 
 /// Data source pour gérer les playlists stockées localement
@@ -44,6 +42,38 @@ class PlaylistLocalDataSourceImpl implements PlaylistLocalDataSource {
     await Hive.initFlutter();
     _playlistsBox = await Hive.openBox<Map>(_playlistsBoxName);
     _rankedPlaylistsBox = await Hive.openBox<Map>(_rankedPlaylistsBoxName);
+    await _cleanupRankedDuplicates();
+  }
+
+  Future<void> _cleanupRankedDuplicates() async {
+    final rankedIds = <String>{};
+
+    for (var i = 0; i < rankedPlaylistsBox.length; i++) {
+      final data = rankedPlaylistsBox.getAt(i);
+      if (data == null) {
+        continue;
+      }
+
+      final jsonMap = Map<String, dynamic>.from(data);
+      final Map<String, dynamic> playlistMap = Map<String, dynamic>.from(jsonMap['playlist']);
+      final playlistId = playlistMap['id'] as String?;
+      if (playlistId != null) {
+        rankedIds.add(playlistId);
+      }
+    }
+
+    for (var i = playlistsBox.length - 1; i >= 0; i--) {
+      final data = playlistsBox.getAt(i);
+      if (data == null) {
+        continue;
+      }
+
+      final jsonMap = Map<String, dynamic>.from(data);
+      final playlistId = jsonMap['id'] as String?;
+      if (playlistId != null && rankedIds.contains(playlistId)) {
+        await playlistsBox.deleteAt(i);
+      }
+    }
   }
 
   Box<Map> get playlistsBox {
@@ -63,13 +93,31 @@ class PlaylistLocalDataSourceImpl implements PlaylistLocalDataSource {
   @override
   Future<List<PlaylistModel>> getAllPlaylists() async {
     try {
+      final rankedIds = <String>{};
+      for (var i = 0; i < rankedPlaylistsBox.length; i++) {
+        final data = rankedPlaylistsBox.getAt(i);
+        if (data == null) {
+          continue;
+        }
+
+        final jsonMap = Map<String, dynamic>.from(data);
+        final Map<String, dynamic> playlistMap = Map<String, dynamic>.from(jsonMap['playlist']);
+        final playlistId = playlistMap['id'] as String?;
+        if (playlistId != null) {
+          rankedIds.add(playlistId);
+        }
+      }
+
       final playlists = <PlaylistModel>[];
       
       for (var i = 0; i < playlistsBox.length; i++) {
         final data = playlistsBox.getAt(i);
         if (data != null) {
           final jsonMap = Map<String, dynamic>.from(data);
-          playlists.add(PlaylistModel.fromJson(jsonMap));
+          final playlistId = jsonMap['id'] as String?;
+          if (playlistId == null || !rankedIds.contains(playlistId)) {
+            playlists.add(PlaylistModel.fromJson(jsonMap));
+          }
         }
       }
       
@@ -156,9 +204,19 @@ class PlaylistLocalDataSourceImpl implements PlaylistLocalDataSource {
   Future<void> saveRankedPlaylist(RankedPlaylistModel rankedPlaylist) async {
     try {
       final jsonData = rankedPlaylist.toJson();
-      
-      // Sauvegarde aussi la playlist dans la box normale
-      await savePlaylist(PlaylistModel.fromEntity(rankedPlaylist.playlist));
+
+      // Remove any stale normal copy of this ranked playlist.
+      for (var i = playlistsBox.length - 1; i >= 0; i--) {
+        final data = playlistsBox.getAt(i);
+        if (data == null) {
+          continue;
+        }
+
+        final jsonMap = Map<String, dynamic>.from(data);
+        if (jsonMap['id'] == rankedPlaylist.id) {
+          await playlistsBox.deleteAt(i);
+        }
+      }
       
       // Cherche si la ranked playlist existe déjà
       int? existingIndex;

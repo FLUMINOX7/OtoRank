@@ -10,6 +10,7 @@ import '../../domain/usecases/add_songs_to_playlist.dart';
 import '../../domain/usecases/remove_songs_from_playlist.dart';
 import '../../domain/usecases/get_local_songs.dart';
 import '../../domain/repositories/music_repository.dart';
+import '../../domain/entities/ranked_playlist.dart';
 import 'playlist_event.dart';
 import 'playlist_state.dart';
 
@@ -67,14 +68,16 @@ class PlaylistBloc extends Bloc<PlaylistEvent, PlaylistState> {
         playlistsResult.fold(
           (failure) => emit(PlaylistError(failure.message, allSongs: songs)),
           (playlists) {
-            rankedPlaylistsResult.fold(
-              (failure) => emit(PlaylistError(failure.message, allSongs: songs)),
-              (rankedPlaylists) => emit(PlaylistsLoaded(
-                playlists: playlists,
-                rankedPlaylists: rankedPlaylists,
-                allSongs: songs,
-              )),
+            final rankedPlaylists = rankedPlaylistsResult.fold(
+              (_) => <RankedPlaylist>[],
+              (value) => value,
             );
+
+            emit(PlaylistsLoaded(
+              playlists: playlists,
+              rankedPlaylists: rankedPlaylists,
+              allSongs: songs,
+            ));
           },
         );
       },

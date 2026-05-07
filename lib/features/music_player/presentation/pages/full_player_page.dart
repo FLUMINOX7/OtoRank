@@ -105,29 +105,7 @@ class _FullPlayerPageState extends State<FullPlayerPage> with TickerProviderStat
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.queue_music, color: Colors.white),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/queue');
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.equalizer, color: Colors.white),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/equalizer');
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.more_vert, color: Colors.white),
-                              onPressed: () {
-                                // TODO: Show options menu
-                              },
-                            ),
-                          ],
-                        ),
+                        const SizedBox(width: 0),
                       ],
                     ),
                   ),
@@ -379,35 +357,61 @@ class _FullPlayerPageState extends State<FullPlayerPage> with TickerProviderStat
 
                   const SizedBox(height: 20),
 
-                  // Additional controls
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  // Bottom action bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.playlist_play, color: Colors.white60, size: 28),
-                          onPressed: () {
-                            // TODO: Show queue
-                          },
+                        // Queue button
+                        Tooltip(
+                          message: 'Queue',
+                          child: IconButton(
+                            icon: const Icon(Icons.queue_music, color: Colors.white70, size: 28),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/queue');
+                            },
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.equalizer, color: Colors.white60, size: 28),
-                          onPressed: () {
-                            // TODO: Show equalizer
-                          },
+                        // Equalizer button
+                        Tooltip(
+                          message: 'Equalizer',
+                          child: IconButton(
+                            icon: const Icon(Icons.graphic_eq, color: Colors.white70, size: 28),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/equalizer');
+                            },
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.timer, color: Colors.white60, size: 28),
-                          onPressed: () {
-                            // TODO: Show sleep timer
-                          },
+                        // Add to Playlist button
+                        Tooltip(
+                          message: 'Add to Playlist',
+                          child: IconButton(
+                            icon: const Icon(Icons.playlist_add, color: Colors.white70, size: 28),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Add to Playlist - Feature coming soon'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.share, color: Colors.white60, size: 28),
-                          onPressed: () {
-                            // TODO: Share song
-                          },
+                        // Edit song info button
+                        Tooltip(
+                          message: 'Edit Info',
+                          child: IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.white70, size: 28),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Edit song info - Feature coming soon'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),

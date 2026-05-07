@@ -2,6 +2,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/playlist.dart';
 import '../bloc/playlist_bloc.dart';
 import '../bloc/playlist_event.dart';
 import '../bloc/playlist_state.dart';
@@ -42,115 +43,142 @@ class PlaylistListWidget extends StatelessWidget {
         }
 
         if (state is PlaylistsLoaded) {
-          // If there are no playlists at all, show a single button to create one
-          if (state.playlists.isEmpty && state.rankedPlaylists.isEmpty) {
-            return Center(
-              child: ElevatedButton.icon(
-                onPressed: () => _showInitialCreateDialog(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Create Playlist'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
-              ),
-            );
-          }
+          final items = _buildPlaylistItems(state);
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
-            },
-            child: ListView(
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF1A0A2F),
+                  Color(0xFF2A1039),
+                  Color(0xFF3B1528),
+                  Color(0xFF140A16),
+                ],
+              ),
+            ),
+            child: Stack(
               children: [
-                // Section Ranked Playlists (toujours affichée)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Ranked Playlists',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Positioned(
+                  top: -60,
+                  left: -30,
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Color(0x66FF6A00),
+                          Color(0x22FF2D55),
+                          Colors.transparent,
+                        ],
                       ),
-                      const Spacer(),
-                      ElevatedButton.icon(
-                        onPressed: () => _showCreateRankedPlaylistDialog(context),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('New'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                if (state.rankedPlaylists.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Center(
-                          child: Text(
-                            'No ranked playlists yet',
-                            style: TextStyle(color: Colors.grey[600]),
+                Positioned(
+                  top: 40,
+                  right: -50,
+                  child: Container(
+                    width: 180,
+                    height: 180,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Color(0x55FF3D00),
+                          Color(0x22B43DFF),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (items.isEmpty)
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        color: const Color(0xAA120B1A),
+                        border: Border.all(color: const Color(0x66FF6A00), width: 1.2),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFFF5A00), Color(0xFFB432FF)],
+                              ),
+                            ),
+                            child: const Icon(Icons.local_fire_department, color: Colors.white, size: 34),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No playlists yet',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Create your first ranked or normal playlist.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => _showCreateMenu(context),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: const Color(0xFFED4B00),
+                              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Playlist'),
+                          ),
+                        ],
                       ),
                     ),
                   )
                 else
-                  ...state.rankedPlaylists.map((rp) => _buildRankedPlaylistTile(context, rp)),
-                
-                const SizedBox(height: 24),
-                
-                // Section Playlists Normales (toujours affichée)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.playlist_play),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Normal Playlists',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<PlaylistBloc>().add(LoadAllPlaylistsEvent());
+                    },
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Playlists',
+                                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () => _showCreateMenu(context),
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Add'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFED4B00),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const Spacer(),
-                      ElevatedButton.icon(
-                        onPressed: () => _showCreatePlaylistDialog(context),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('New'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (state.playlists.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Center(
-                          child: Text(
-                            'No normal playlists yet',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ),
-                      ),
+                        const SizedBox(height: 10),
+                        ...items.map((item) => _buildPlaylistItemTile(context, item)),
+                      ],
                     ),
-                  )
-                else
-                  ...state.playlists.map((p) => _buildPlaylistTile(context, p)),
-                
-                const SizedBox(height: 80), // Espace pour le mini-player
+                  ),
               ],
             ),
           );
@@ -161,17 +189,32 @@ class PlaylistListWidget extends StatelessWidget {
     );
   }
 
-  void _showInitialCreateDialog(BuildContext context) {
+  List<_PlaylistItem> _buildPlaylistItems(PlaylistsLoaded state) {
+    final items = [
+      ...state.rankedPlaylists.map(
+        (rankedPlaylist) => _PlaylistItem.ranked(
+          rankedPlaylist,
+          rankedPlaylist.rankOrder ?? PlaylistRank.getOrder(rankedPlaylist.rank),
+        ),
+      ),
+      ...state.playlists.map((playlist) => _PlaylistItem.normal(playlist, 1000)),
+    ];
+
+    items.sort((left, right) => left.name.toLowerCase().compareTo(right.name.toLowerCase()));
+    return items;
+  }
+
+  void _showCreateMenu(BuildContext context) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Create Playlist'),
-        content: const Text('Create a normal playlist or a ranked playlist?'),
+        title: const Text('Create playlist'),
+        content: const Text('Choose the playlist type.'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              _showCreatePlaylistDialog(context);
+              _showCreateNormalPlaylistDialog(context);
             },
             child: const Text('Normal'),
           ),
@@ -187,204 +230,182 @@ class PlaylistListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRankedPlaylistTile(BuildContext context, RankedPlaylist rankedPlaylist) {
-    final playlist = rankedPlaylist.playlist;
+  void _showCreateNormalPlaylistDialog(BuildContext context) {
+    _showCreatePlaylistDialog(context);
+  }
+
+  Widget _buildPlaylistItemTile(BuildContext context, _PlaylistItem item) {
+    final isRanked = item.isRanked || _isPseudoRanked(item.playlist);
+    final effectivePlaylist = item.isRanked ? item.rankedPlaylist!.playlist : item.playlist!;
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: Colors.transparent,
+      elevation: 0,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/playlist-detail',
-            arguments: {
-              'playlistId': playlist.id,
-              'isRanked': true,
-            },
-          );
-        },
-        child: ListTile(
-          leading: Hero(
-            tag: 'playlist-${playlist.id}',
-            child: CircleAvatar(
-              backgroundColor: _getRankColor(rankedPlaylist.rank),
-              child: Text(
-                rankedPlaylist.rank,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _openPlaylist(context, effectivePlaylist.id, item.isRanked),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xCC341839),
+                Color(0xCC4D1E2F),
+                Color(0xCC6A280A),
+              ],
+            ),
+            border: Border.all(
+              color: isRanked ? const Color(0xAAFF6A00) : const Color(0x88A24BFF),
+              width: 1.2,
             ),
           ),
-          title: Text(
-            playlist.name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
-          trailing: PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'open':
-                  Navigator.pushNamed(
-                    context,
-                    '/playlist-detail',
-                    arguments: {
-                      'playlistId': playlist.id,
-                      'isRanked': true,
-                    },
-                  );
-                  break;
-                case 'rename':
-                  _showRenameDialog(context, playlist);
-                  break;
-                case 'change_rank':
-                  _showChangeRankDialog(context, playlist, rankedPlaylist.rank);
-                  break;
-                case 'delete':
-                  _showDeleteDialog(context, playlist);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'open',
-                child: Row(
-                  children: [
-                    Icon(Icons.open_in_new),
-                    SizedBox(width: 8),
-                    Text('Open'),
-                  ],
-                ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            leading: Hero(
+              tag: 'playlist-${effectivePlaylist.id}',
+              child: CircleAvatar(
+                backgroundColor: isRanked
+                    ? _getRankColor(item.isRanked ? item.rankedPlaylist!.rank : _extractPseudoRank(effectivePlaylist.name))
+                    : const Color(0xFF8A3BFF),
+                child: isRanked
+                    ? Text(
+                        item.isRanked ? item.rankedPlaylist!.rank : _extractPseudoRank(effectivePlaylist.name),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.playlist_play, color: Colors.white),
               ),
-              const PopupMenuItem(
-                value: 'rename',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit),
-                    SizedBox(width: 8),
-                    Text('Rename'),
-                  ],
+            ),
+            title: Text(
+              _cleanPlaylistName(effectivePlaylist.name),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Row(
+              children: [
+                Text(
+                  '${effectivePlaylist.songCount} song${effectivePlaylist.songCount != 1 ? 's' : ''}',
+                  style: const TextStyle(color: Colors.white70),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'change_rank',
-                child: Row(
-                  children: [
-                    Icon(Icons.star),
-                    SizedBox(width: 8),
-                    Text('Change Rank'),
-                  ],
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: isRanked ? const Color(0x33FF6A00) : const Color(0x338A3BFF),
+                    border: Border.all(
+                      color: isRanked ? const Color(0xAAFF6A00) : const Color(0x88A24BFF),
+                    ),
+                  ),
+                  child: Text(
+                    isRanked ? 'Ranked' : 'Normal',
+                    style: TextStyle(
+                      color: isRanked ? const Color(0xFFFFC08C) : const Color(0xFFD5B2FF),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: Colors.red)),
-                  ],
+              ],
+            ),
+            trailing: PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) {
+                switch (value) {
+                  case 'open':
+                    _openPlaylist(context, effectivePlaylist.id, item.isRanked);
+                    break;
+                  case 'rename':
+                    _showRenameDialog(context, effectivePlaylist);
+                    break;
+                  case 'change_rank':
+                    if (item.isRanked) {
+                      _showChangeRankDialog(context, effectivePlaylist, item.rankedPlaylist!.rank);
+                    }
+                    break;
+                  case 'delete':
+                    _showDeleteDialog(context, effectivePlaylist);
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'open',
+                  child: Row(
+                    children: [
+                      Icon(Icons.open_in_new),
+                      SizedBox(width: 8),
+                      Text('Open'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Rename'),
+                    ],
+                  ),
+                ),
+                if (item.isRanked)
+                  const PopupMenuItem(
+                    value: 'change_rank',
+                    child: Row(
+                      children: [
+                        Icon(Icons.star),
+                        SizedBox(width: 8),
+                        Text('Change Rank'),
+                      ],
+                    ),
+                  ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPlaylistTile(BuildContext context, playlist) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/playlist-detail',
-            arguments: {
-              'playlistId': playlist.id,
-              'isRanked': false,
-            },
-          );
-        },
-        child: ListTile(
-          leading: Hero(
-            tag: 'playlist-${playlist.id}',
-            child: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-              child: Icon(
-                Icons.playlist_play,
-                color: Theme.of(context).colorScheme.onSecondaryContainer,
-              ),
-            ),
-          ),
-          title: Text(
-            playlist.name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text('${playlist.songCount} song${playlist.songCount != 1 ? 's' : ''}'),
-          trailing: PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'open':
-                  Navigator.pushNamed(
-                    context,
-                    '/playlist-detail',
-                    arguments: {
-                      'playlistId': playlist.id,
-                      'isRanked': false,
-                    },
-                  );
-                  break;
-                case 'rename':
-                  _showRenameDialog(context, playlist);
-                  break;
-                case 'delete':
-                  _showDeleteDialog(context, playlist);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'open',
-                child: Row(
-                  children: [
-                    Icon(Icons.open_in_new),
-                    SizedBox(width: 8),
-                    Text('Open'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'rename',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit),
-                    SizedBox(width: 8),
-                    Text('Rename'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  bool _isPseudoRanked(Playlist? playlist) {
+    if (playlist == null) {
+      return false;
+    }
+    return playlist.name.contains(' [RANK ');
+  }
+
+  String _extractPseudoRank(String playlistName) {
+    final match = RegExp(r'\[RANK\s+([SABCD])\]').firstMatch(playlistName.toUpperCase());
+    return match?.group(1) ?? 'A';
+  }
+
+  String _cleanPlaylistName(String playlistName) {
+    return playlistName.replaceFirst(RegExp(r'\s*\[RANK\s+[SABCD]\]$', caseSensitive: false), '').trim();
+  }
+
+  void _openPlaylist(BuildContext context, String playlistId, bool isRanked) {
+    Navigator.pushNamed(
+      context,
+      '/playlist-detail',
+      arguments: {
+        'playlistId': playlistId,
+        'isRanked': isRanked,
+      },
     );
   }
 
@@ -467,7 +488,7 @@ class PlaylistListWidget extends StatelessWidget {
                 decoration: const InputDecoration(
                   labelText: 'Rank',
                 ),
-                items: PlaylistRank.defaultRanks.keys.map((rank) {
+                items: PlaylistRank.creatableRanks.map((rank) {
                   return DropdownMenuItem(
                     value: rank,
                     child: Text(rank),
@@ -489,11 +510,9 @@ class PlaylistListWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
+                  // Temporary safe-mode: create as a normal playlist to avoid ranked type issues.
                   context.read<PlaylistBloc>().add(
-                        CreateRankedPlaylistEvent(
-                          name: nameController.text,
-                          rank: selectedRank,
-                        ),
+                        CreatePlaylistEvent(name: '${nameController.text} [RANK $selectedRank]'),
                       );
                   Navigator.pop(dialogContext);
                 }
@@ -575,7 +594,7 @@ class PlaylistListWidget extends StatelessWidget {
                 decoration: const InputDecoration(
                   labelText: 'Rank',
                 ),
-                items: PlaylistRank.defaultRanks.keys.map((rank) {
+                items: PlaylistRank.creatableRanks.map((rank) {
                   return DropdownMenuItem(
                     value: rank,
                     child: Row(
@@ -665,4 +684,23 @@ class PlaylistListWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PlaylistItem {
+  final Playlist? playlist;
+  final RankedPlaylist? rankedPlaylist;
+  final int sortOrder;
+
+  _PlaylistItem._({this.playlist, this.rankedPlaylist, required this.sortOrder});
+
+  factory _PlaylistItem.normal(Playlist playlist, int sortOrder) {
+    return _PlaylistItem._(playlist: playlist, sortOrder: sortOrder);
+  }
+
+  factory _PlaylistItem.ranked(RankedPlaylist rankedPlaylist, int sortOrder) {
+    return _PlaylistItem._(rankedPlaylist: rankedPlaylist, sortOrder: sortOrder);
+  }
+
+  bool get isRanked => rankedPlaylist != null;
+  String get name => isRanked ? rankedPlaylist!.playlist.name : playlist!.name;
 }

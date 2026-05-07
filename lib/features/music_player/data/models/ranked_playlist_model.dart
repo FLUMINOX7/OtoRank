@@ -15,7 +15,7 @@ class RankedPlaylistModel extends RankedPlaylist {
   /// Crée un RankedPlaylistModel à partir d'un JSON
   factory RankedPlaylistModel.fromJson(Map<String, dynamic> json) {
     return RankedPlaylistModel(
-      playlist: PlaylistModel.fromJson(json['playlist'] as Map<String, dynamic>),
+      playlist: PlaylistModel.fromJson(_asStringKeyedMap(json['playlist'])),
       rank: json['rank'] as String,
       rankOrder: json['rankOrder'] as int?,
     );
@@ -60,4 +60,18 @@ class RankedPlaylistModel extends RankedPlaylist {
       rankOrder: rankOrder ?? this.rankOrder,
     );
   }
+}
+
+Map<String, dynamic> _asStringKeyedMap(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+
+  if (value is Map) {
+    return Map<String, dynamic>.from(value.map((key, dynamic item) {
+      return MapEntry(key.toString(), item);
+    }));
+  }
+
+  throw TypeError();
 }
