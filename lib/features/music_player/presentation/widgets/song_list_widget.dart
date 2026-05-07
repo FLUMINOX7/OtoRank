@@ -2,7 +2,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:otorank/core/errors/failures.dart';
 import '../../domain/usecases/get_local_songs.dart';
 import '../../domain/entities/song.dart';
 import '../../di/music_player_injection.dart';

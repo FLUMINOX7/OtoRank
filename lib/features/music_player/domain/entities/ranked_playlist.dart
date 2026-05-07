@@ -48,6 +48,9 @@ class PlaylistRank {
   static const String d = 'D';
   static const String unranked = 'Unranked';
 
+  /// Rangs proposés à la création d'une playlist classée.
+  static const List<String> creatableRanks = [s, a, b, c, d];
+
   /// Liste des rangs par défaut avec leur ordre
   static const Map<String, int> defaultRanks = {
     s: 0,

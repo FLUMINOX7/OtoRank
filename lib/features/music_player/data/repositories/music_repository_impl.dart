@@ -10,7 +10,6 @@ import '../datasources/local_music_datasource.dart';
 import '../datasources/playlist_local_datasource.dart';
 import '../models/playlist_model.dart';
 import '../models/ranked_playlist_model.dart';
-import '../models/song_model.dart';
 import 'package:uuid/uuid.dart';
 
 /// Implémentation du MusicRepository
@@ -81,10 +80,18 @@ class MusicRepositoryImpl implements MusicRepository {
   Future<Either<Failure, Playlist>> getPlaylistById(String id) async {
     try {
       final playlist = await playlistLocalDataSource.getPlaylistById(id);
-      if (playlist == null) {
-        return Left(CacheFailure(message: 'Playlist non trouvée'));
+      if (playlist != null) {
+        return Right(playlist);
       }
-      return Right(playlist);
+
+      final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+      for (final rankedPlaylist in rankedPlaylists) {
+        if (rankedPlaylist.playlist.id == id) {
+          return Right(rankedPlaylist.playlist);
+        }
+      }
+
+      return Left(CacheFailure(message: 'Playlist non trouvée'));
     } catch (e) {
       return Left(CacheFailure(message: e.toString()));
     }
@@ -144,10 +151,26 @@ class MusicRepositoryImpl implements MusicRepository {
   @override
   Future<Either<Failure, Playlist>> updatePlaylist(Playlist playlist) async {
     try {
+      final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+      for (final rankedPlaylist in rankedPlaylists) {
+        if (rankedPlaylist.playlist.id == playlist.id) {
+          final updatedRanked = RankedPlaylistModel(
+            playlist: PlaylistModel.fromEntity(playlist).copyWith(
+              modifiedDate: DateTime.now(),
+            ),
+            rank: rankedPlaylist.rank,
+            rankOrder: rankedPlaylist.rankOrder,
+          );
+
+          await playlistLocalDataSource.saveRankedPlaylist(updatedRanked);
+          return Right(updatedRanked.playlist);
+        }
+      }
+
       final updatedPlaylist = PlaylistModel.fromEntity(playlist).copyWith(
         modifiedDate: DateTime.now(),
       );
-      
+
       await playlistLocalDataSource.savePlaylist(updatedPlaylist);
       return Right(updatedPlaylist);
     } catch (e) {
@@ -207,12 +230,53 @@ class MusicRepositoryImpl implements MusicRepository {
       return playlistResult.fold(
         (failure) => Left(failure),
         (playlist) async {
-          final updatedSongs = List<Song>.from(playlist.songs)..add(song);
+          final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+          final targetRanked = rankedPlaylists
+              .where((rp) => rp.playlist.id == playlist.id)
+              .cast<RankedPlaylistModel?>()
+              .firstOrNull;
+
+          if (targetRanked != null) {
+            final targetOrder = targetRanked.rankOrder ?? PlaylistRank.getOrder(targetRanked.rank);
+            final sameGroup = rankedPlaylists.where((rp) {
+              final rpOrder = rp.rankOrder ?? PlaylistRank.getOrder(rp.rank);
+              return rp.playlist.name == targetRanked.playlist.name && rpOrder >= targetOrder;
+            });
+
+            for (final rankedPlaylist in sameGroup) {
+              final alreadyPresent = rankedPlaylist.playlist.songs.any((s) => s.id == song.id);
+              if (alreadyPresent) {
+                continue;
+              }
+
+              final updatedSongs = List<Song>.from(rankedPlaylist.playlist.songs)..add(song);
+              await playlistLocalDataSource.saveRankedPlaylist(
+                RankedPlaylistModel(
+                  playlist: PlaylistModel.fromEntity(rankedPlaylist.playlist).copyWith(
+                    songs: updatedSongs,
+                    modifiedDate: DateTime.now(),
+                  ),
+                  rank: rankedPlaylist.rank,
+                  rankOrder: rankedPlaylist.rankOrder,
+                ),
+              );
+            }
+
+            final updatedTarget = targetRanked.playlist.copyWith(
+              songs: targetRanked.playlist.songs.any((s) => s.id == song.id)
+                  ? List<Song>.from(targetRanked.playlist.songs)
+                  : [...targetRanked.playlist.songs, song],
+              modifiedDate: DateTime.now(),
+            );
+            return Right(updatedTarget);
+          }
+
+          final alreadyPresent = playlist.songs.any((s) => s.id == song.id);
           final updatedPlaylist = playlist.copyWith(
-            songs: updatedSongs,
+            songs: alreadyPresent ? List<Song>.from(playlist.songs) : [...playlist.songs, song],
             modifiedDate: DateTime.now(),
           );
-          
+
           return await updatePlaylist(updatedPlaylist);
         },
       );
@@ -232,6 +296,29 @@ class MusicRepositoryImpl implements MusicRepository {
       return playlistResult.fold(
         (failure) => Left(failure),
         (playlist) async {
+          final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+          final targetRanked = rankedPlaylists
+              .where((rp) => rp.playlist.id == playlist.id)
+              .cast<RankedPlaylistModel?>()
+              .firstOrNull;
+
+          if (targetRanked != null) {
+            final updatedSongs = targetRanked.playlist.songs
+                .where((item) => item.id != songId)
+                .toList();
+
+            await playlistLocalDataSource.saveRankedPlaylist(
+              targetRanked.copyWith(
+                playlist: PlaylistModel.fromEntity(targetRanked.playlist).copyWith(
+                  songs: updatedSongs,
+                  modifiedDate: DateTime.now(),
+                ),
+              ),
+            );
+
+            return Right(targetRanked.playlist.copyWith(songs: updatedSongs, modifiedDate: DateTime.now()));
+          }
+
           final updatedSongs = playlist.songs
               .where((song) => song.id != songId)
               .toList();
@@ -270,6 +357,28 @@ class MusicRepositoryImpl implements MusicRepository {
       return playlistResult.fold(
         (failure) => Left(failure),
         (playlist) async {
+          final rankedPlaylists = await playlistLocalDataSource.getRankedPlaylists();
+          final targetRanked = rankedPlaylists
+              .where((rp) => rp.playlist.id == playlist.id)
+              .cast<RankedPlaylistModel?>()
+              .firstOrNull;
+
+          if (targetRanked != null) {
+            final updatedSongs = List<Song>.from(targetRanked.playlist.songs);
+            final song = updatedSongs.removeAt(oldIndex);
+            updatedSongs.insert(newIndex, song);
+
+            final updatedRanked = targetRanked.copyWith(
+              playlist: PlaylistModel.fromEntity(targetRanked.playlist).copyWith(
+                songs: updatedSongs,
+                modifiedDate: DateTime.now(),
+              ),
+            );
+
+            await playlistLocalDataSource.saveRankedPlaylist(updatedRanked);
+            return Right(updatedRanked.playlist);
+          }
+
           final updatedSongs = List<Song>.from(playlist.songs);
           final song = updatedSongs.removeAt(oldIndex);
           updatedSongs.insert(newIndex, song);

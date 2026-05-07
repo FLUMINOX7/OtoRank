@@ -1,6 +1,8 @@
 library;
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Page d'égaliseur avec contrôles de fréquences et presets
 class EqualizerPage extends StatefulWidget {
@@ -11,6 +13,9 @@ class EqualizerPage extends StatefulWidget {
 }
 
 class _EqualizerPageState extends State<EqualizerPage> {
+  static const String _prefsKeyPreset = 'equalizer_selected_preset';
+  static const String _prefsKeyBands = 'equalizer_band_values';
+
   // Bands de fréquences (Hz) et leurs valeurs (dB: -12 to +12)
   final Map<String, double> _bandValues = {
     '60 Hz': 0.0,
@@ -26,6 +31,53 @@ class _EqualizerPageState extends State<EqualizerPage> {
   };
 
   String _selectedPreset = 'Flat';
+  SharedPreferences? _sharedPreferences;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEqualizerSettings();
+  }
+
+  Future<void> _loadEqualizerSettings() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+    final storedPreset = _sharedPreferences!.getString(_prefsKeyPreset);
+    final storedBands = _sharedPreferences!.getString(_prefsKeyBands);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (storedPreset != null && _presets.containsKey(storedPreset)) {
+        _selectedPreset = storedPreset;
+      }
+
+      if (storedBands != null) {
+        try {
+          final decoded = jsonDecode(storedBands) as Map<String, dynamic>;
+          for (final entry in decoded.entries) {
+            if (_bandValues.containsKey(entry.key)) {
+              _bandValues[entry.key] = (entry.value as num).toDouble();
+            }
+          }
+        } catch (_) {
+          if (_selectedPreset != 'Flat' && _presets.containsKey(_selectedPreset)) {
+            _bandValues.addAll(_presets[_selectedPreset]!);
+          }
+        }
+      } else if (_selectedPreset != 'Flat' && _presets.containsKey(_selectedPreset)) {
+        _bandValues.addAll(_presets[_selectedPreset]!);
+      }
+    });
+  }
+
+  Future<void> _saveEqualizerSettings() async {
+    final prefs = _sharedPreferences ?? await SharedPreferences.getInstance();
+    _sharedPreferences = prefs;
+    await prefs.setString(_prefsKeyPreset, _selectedPreset);
+    await prefs.setString(_prefsKeyBands, jsonEncode(_bandValues));
+  }
   
   final Map<String, Map<String, double>> _presets = {
     'Flat': {
@@ -131,6 +183,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
       _selectedPreset = preset;
       _bandValues.addAll(_presets[preset]!);
     });
+    _saveEqualizerSettings();
     
     // TODO: Apply to audio player
     print('🎵 Applied preset: $preset');
@@ -141,6 +194,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
       _selectedPreset = 'Flat';
       _bandValues.updateAll((key, value) => 0.0);
     });
+    _saveEqualizerSettings();
   }
 
   @override
@@ -286,6 +340,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
                                       _selectedPreset = 'Flat';
                                     }
                                   });
+                                    _saveEqualizerSettings();
                                   
                                   // TODO: Apply to audio player in real-time
                                   print('🎛️ ${entry.key}: ${value.toStringAsFixed(1)} dB');
@@ -347,7 +402,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Save custom preset
+                      _saveEqualizerSettings();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Equalizer settings saved'),

@@ -21,7 +21,7 @@ class PlaylistModel extends Playlist {
       id: json['id'] as String,
       name: json['name'] as String,
       songs: (json['songs'] as List<dynamic>)
-          .map((song) => SongModel.fromJson(song as Map<String, dynamic>))
+          .map((song) => SongModel.fromJson(_asStringKeyedMap(song)))
           .toList(),
       createdDate: DateTime.parse(json['createdDate'] as String),
       modifiedDate: json['modifiedDate'] != null
@@ -85,4 +85,18 @@ class PlaylistModel extends Playlist {
       coverArtPath: coverArtPath ?? this.coverArtPath,
     );
   }
+}
+
+Map<String, dynamic> _asStringKeyedMap(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+
+  if (value is Map) {
+    return Map<String, dynamic>.from(value.map((key, dynamic item) {
+      return MapEntry(key.toString(), item);
+    }));
+  }
+
+  throw TypeError();
 }
