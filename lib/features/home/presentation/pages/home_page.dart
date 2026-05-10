@@ -136,8 +136,8 @@ class HomePage extends StatelessWidget {
                 _buildFeatureCard(
                   context,
                   icon: Icons.download_rounded,
-                  title: 'YouTube Downloader',
-                  description: 'Download music from YouTube',
+                  title: 'YouTube Converter',
+                  description: 'Convert YouTube audio',
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFF7B1FA2).withOpacity(0.95), // Purple

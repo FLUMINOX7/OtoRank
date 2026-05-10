@@ -77,8 +77,8 @@ class AppDrawer extends StatelessWidget {
           _buildDrawerItem(
             context,
             icon: Icons.download_rounded,
-            title: 'YouTube Downloader',
-            subtitle: 'Download MP3/M4A',
+            title: 'YouTube Converter',
+            subtitle: 'Convert YouTube audio',
             route: '/youtube-downloader',
           ),
           _buildDrawerItem(
