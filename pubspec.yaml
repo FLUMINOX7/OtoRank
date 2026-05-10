@@ -46,8 +46,8 @@ dependencies:
   equatable: ^2.0.5
 
   # Network
-  # http: ^1.1.0
-  # dio: ^5.4.0
+  dio: ^5.4.0
+  youtube_explode_dart: ^1.12.4
 
   # Local Storage
   shared_preferences: ^2.3.2
